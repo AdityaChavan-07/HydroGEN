@@ -1,0 +1,2258 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plastic-to-Hydrogen Scenario Explorer | ATT Energy Analysis</title>
+    <meta name="description" content="An interactive, assumption-led overview of a proposed alkaline thermal treatment pathway for converting mixed plastic waste into hydrogen." />
+    <meta name="theme-color" content="#07140f" />
+    <!--
+    SELECTED COLOR PALETTE: Corporate sustainability analytics
+    Primary: Forest (#07140f / #0b1d16); Secondary: Emerald (#40c98a) and sea-glass teal (#57c7b5)
+    Accent: Warm amber (#d8ad56); risk colors retained only for impact-related content
+
+    NARRATIVE & STRUCTURE PLAN:
+    1. Executive Overview & Key Metrics: Macro global energy demand (9,938 Mtoe / 115,579 TWh) & waste plastic growth (519 Mt -> 588 Mt).
+    2. Interactive 6-Stage ATT Process Blueprint: Shredder -> Purifier -> Pyrolysis/ATT -> Condenser -> Gas Purifier -> Storage.
+    3. Plastic Feedstock & Hydrogen Yield Matrix: Resin Codes 1-7 (PET, HDPE, PVC, LDPE, PP, PS, OTHER) calorific values & yields.
+    4. Calorific Benchmark Analysis: Hydrogen (141.8 MJ/kg) vs Natural Gas, Petrol, Diesel, Plastics, Coal, Biomass.
+    5. Stoichiometry & Reaction Kinetics: PE, PET, and MSW mixed plastic depolymerization calculations.
+    6. Sectoral Demand & ATT Fulfillment Matrix: Quantitative coverage across Aviation, Marine, Heavy Freight, Steel, Petrochemicals.
+    7. Downstream Sector Decarbonization Hub: Power Gen, Heavy Industry (H2-DRI), Refining/Ammonia, Transportation & Aerospace (ISRO CE-20).
+    8. Operational Plant Scale & Financial CapEx: Small (1t/d), Mid (10t/d), Large (100t/d) CapEx in INR (₹) and annual yields.
+    9. Commercial Phase Roadmap & Carbon Mineralization: 3-phase deployment strategy and solid carbon recovery.
+
+    VISUALIZATION SELECTION & JUSTIFICATION:
+    - Chart 1: Global Fuel Carriers (Goal: Compare Composition -> Chart.js Doughnut)
+    - Chart 2: Plastic Resin Code Suitability (Goal: Compare Categories -> Chart.js Bar Chart)
+    - Chart 3: Calorific Values Benchmark (Goal: Ranking & Energy Comparison -> Chart.js Horizontal Bar Chart)
+    - Chart 4: Sector Fuel Fulfillment Capacity (Goal: Compare Projections -> Chart.js Grouped Bar)
+    - Chart 5: Plant Scale Energy Yield (Goal: Compare Output -> Chart.js Bar)
+    - Process flow blueprint: inline SVG illustration; stage cards provide an accessible alternative.
+    - Charts: Chart.js; no Mermaid is used. The SVG flow diagram is intentionally present.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+            --eco-bg: #07140f;
+            --eco-bg-deep: #050e0a;
+            --eco-surface: #0b1d16;
+            --eco-surface-raised: #10271e;
+            --eco-border: #244536;
+            --eco-border-soft: #1b382a;
+            --eco-text: #eef6f0;
+            --eco-muted: #b3c4b8;
+            --eco-subtle: #8ea397;
+            --eco-green: #40c98a;
+            --eco-teal: #57c7b5;
+            --eco-amber: #d8ad56;
+        }
+        body {
+            background: radial-gradient(ellipse at 50% -12%, #143326 0%, var(--eco-bg) 46%, var(--eco-bg-deep) 100%) !important;
+            color: var(--eco-text) !important;
+        }
+        .bg-slate-950 { background-color: var(--eco-bg-deep) !important; }
+        .bg-slate-900 { background-color: var(--eco-surface) !important; }
+        .bg-slate-800 { background-color: var(--eco-surface-raised) !important; }
+        [class*="bg-slate-950/"] { background-color: rgba(5, 14, 10, .94) !important; }
+        [class*="bg-slate-900/"] { background-color: rgba(11, 29, 22, .93) !important; }
+        [class*="bg-slate-800/"] { background-color: rgba(16, 39, 30, .9) !important; }
+        [class*="border-slate-800"] { border-color: var(--eco-border) !important; }
+        [class*="divide-slate-800"] > :not([hidden]) ~ :not([hidden]) { border-color: var(--eco-border-soft) !important; }
+        .text-slate-100 { color: var(--eco-text) !important; }
+        .text-slate-200 { color: #dce9e0 !important; }
+        .text-slate-300 { color: #c2d3c7 !important; }
+        .text-slate-400 { color: var(--eco-muted) !important; }
+        .text-slate-500 { color: var(--eco-subtle) !important; }
+        .text-slate-600 { color: #748a7d !important; }
+        .bg-gradient-to-br.from-slate-900 { background-image: linear-gradient(135deg, #0b2018, #132d22) !important; }
+        .bg-gradient-to-b.from-slate-900 { background-image: linear-gradient(to bottom, #0b2018, #07140f) !important; }
+        ::selection { background: rgba(64, 201, 138, .28); color: #f4fff8; }
+        .chart-control {
+            min-height: 42px;
+            border: 1px solid var(--eco-border);
+            border-radius: .7rem;
+            background: #0b1d16;
+            color: var(--eco-text);
+            padding: .55rem .8rem;
+            font: inherit;
+            font-size: .75rem;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, .14);
+            transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+        }
+        .chart-control:hover { border-color: var(--eco-green); background-color: #10271e; }
+        .chart-control:focus-visible { outline: 3px solid var(--eco-green); outline-offset: 2px; }
+        .chart-legend-btn {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            min-height: 38px;
+            padding: .35rem .5rem;
+            border: 1px solid transparent;
+            border-radius: .65rem;
+            color: var(--eco-muted);
+            text-align: left;
+            transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+        }
+        .chart-legend-btn:hover { background: rgba(64, 201, 138, .08); border-color: var(--eco-border); }
+        .chart-legend-btn[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+        .chart-legend-swatch { flex: 0 0 .65rem; width: .65rem; height: .65rem; border-radius: 999px; box-shadow: 0 0 0 2px rgba(255,255,255,.06); }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 340px;
+            max-height: 420px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--eco-green); }
+        html { scroll-behavior: smooth; scroll-padding-top: 7rem; }
+        :focus-visible { outline: 3px solid var(--eco-green); outline-offset: 3px; }
+        .skip-link { position: absolute; left: .75rem; top: -5rem; z-index: 100; }
+        .skip-link:focus { top: .75rem; }
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 520ms ease var(--reveal-delay, 0ms), transform 520ms ease var(--reveal-delay, 0ms);
+        }
+        .scroll-reveal.is-revealed { opacity: 1; transform: translateY(0); }
+        @media (max-width: 1279px) {
+            header > div:first-child { flex-direction: column !important; align-items: stretch !important; }
+            header nav {
+                width: 100%;
+                flex-wrap: nowrap !important;
+                justify-content: flex-start !important;
+                overflow-x: auto;
+                overscroll-behavior-x: contain;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x proximity;
+                scrollbar-width: thin;
+                padding: .25rem 0 .4rem;
+                -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+                mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+            }
+            header nav a { flex: 0 0 auto; min-height: 40px; display: flex; align-items: center; scroll-snap-align: start; }
+            header nav::-webkit-scrollbar { height: 4px; }
+            header nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+        }
+        @media (max-width: 480px) {
+            .chart-container { height: 280px; max-height: 300px; }
+            main { padding-left: .875rem !important; padding-right: .875rem !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+        }
+        @media print {
+            :root, body { background: #fff !important; color: #111827 !important; }
+            header { position: static !important; background: #fff !important; color: #111827 !important; }
+            header nav, #docAdminLogin, #docAdminPanel, .blueprint-container, footer { display: none !important; }
+            main { max-width: none !important; padding: 0 !important; }
+            section, article, .bg-slate-900, .bg-slate-950 { break-inside: avoid; color: #111827 !important; background: #fff !important; box-shadow: none !important; }
+            p, li, td, th, h1, h2, h3, strong, span { color: #111827 !important; }
+            a { color: #111827 !important; text-decoration: underline; }
+            .chart-container { height: 260px !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen custom-scrollbar">
+    <a class="skip-link rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950" href="#main-content">Skip to content</a>
+
+    <!-- Sticky Navigation Header -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col xl:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-400 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-cyan-500/20">
+                    H₂
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                        ATT Energy & Sectoral Analytics
+                    </h1>
+                    <p class="text-[11px] text-slate-400">Waste Plastic-to-Hydrogen Conversion | Team: Aditya Chavan, Anamika Kumar, Samarth Kare</p>
+                </div>
+            </div>
+            <nav aria-label="Section navigation" class="flex flex-wrap items-center justify-center gap-1.5 text-xs font-medium">
+                <a href="#overview" class="px-2.5 py-1 rounded-lg bg-slate-800 text-cyan-400 hover:bg-slate-700 transition">Overview</a>
+                <a href="#pollution-impact" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-rose-400 transition">Pollution Impact</a>
+                <a href="#wildlife" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition">Wildlife &amp; Trends</a>
+                <a href="#blueprint" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Blueprint</a>
+                <a href="#plastics" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Plastics</a>
+                <a href="#calorific" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Calorific</a>
+                <a href="#stoichiometry" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Chemistry</a>
+                <a href="#fulfillment" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Fulfillment</a>
+                <a href="#downstream" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Downstream</a>
+                <a href="#byproducts" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-emerald-400 transition">By-products</a>
+                <a href="#scales" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Scales &amp; CapEx</a>
+                <a href="#research-links" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Research Links</a>
+                <a href="#team" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Team</a>
+                <a href="#documents" class="px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">Documents</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content" tabindex="-1" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- SECTION 1: EXECUTIVE OVERVIEW -->
+        <section id="overview" class="space-y-6">
+            <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="max-w-3xl space-y-3">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        Concept-stage scenario analysis
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-white">
+                        Exploring a proposed route from mixed plastic waste to hydrogen
+                    </h2>
+                    <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                        This dashboard combines global energy context with an <strong>illustrative plastic-to-hydrogen scenario</strong>. Its macro outputs are extrapolations from assumed yields—not a forecast, a commercial plant result, or a life-cycle emissions assessment. A recent bench-scale study of alkaline thermal treatment (ATT) reported hydrogen production from mixed PET, PE, and PP, but also calls for further process optimization and economic evaluation before scale-up.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+                    <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs font-medium">Global Final Energy (TFC)</div>
+                        <div class="text-2xl font-black text-cyan-400 mt-1">9,938 <span class="text-xs text-slate-400 font-normal">Mtoe</span></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">115,578.94 TWh / 416.1 EJ</div>
+                    </div>
+                    <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs font-medium">2031 Plastic Scenario Input</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1">588 <span class="text-xs text-slate-400 font-normal">Million Tonnes</span></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">519 → 588 Mt projected demand (2026–31)</div>
+                    </div>
+                    <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs font-medium">Macro 2031 H₂ Production</div>
+                        <div class="text-2xl font-black text-emerald-400 mt-1">131.92 <span class="text-xs text-slate-400 font-normal">Mt H₂</span></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">378.10 Mtoe (4,397.28 TWh)</div>
+                    </div>
+                    <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs font-medium">Global TFC Coverage</div>
+                        <div class="text-2xl font-black text-teal-300 mt-1">3.80% <span class="text-xs text-slate-400 font-normal">of Total Energy</span></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Alternative allocation scenarios; not simultaneous</div>
+                    </div>
+                </div>
+
+                <aside class="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-xs leading-relaxed text-slate-300">
+                    <strong class="text-cyan-200">Presentation demand context</strong>
+                    <div class="mt-2 grid grid-cols-2 gap-2 text-sm font-semibold">
+                        <div class="rounded-lg bg-slate-950/50 p-2">2026 fuel demand: 3,950 Mtoe</div>
+                        <div class="rounded-lg bg-slate-950/50 p-2">2031 fuel demand: 4,670 Mtoe</div>
+                    </div>
+                    <p class="mt-2 text-[11px] leading-relaxed text-slate-400">Separate presentation series; do not compare directly with 9,938 Mtoe TFC until accounting definitions are aligned. The plastic figures (519→588 Mt) are projected demand, not confirmed recoverable waste or process feedstock.</p>
+                </aside>
+
+                <!-- Interactive Global Energy Carrier Distribution -->
+                <div class="mt-8 rounded-2xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg shadow-black/10">
+                    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-semibold text-slate-200">Global Total Final Energy Consumption by Carrier</h3>
+                            <p id="energyChartCaption" class="mt-1 text-xs text-slate-400">TFC carrier mix; switch units or activate legend items to focus the chart.</p>
+                        </div>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div class="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+                                <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Visible total</div>
+                                <div id="energyChartTotal" class="mt-0.5 text-sm font-bold text-emerald-300">9,938 Mtoe</div>
+                            </div>
+                            <label class="flex flex-col gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400" for="energyUnitSelect">
+                                Energy unit
+                                <select id="energyUnitSelect" class="chart-control normal-case tracking-normal" aria-label="Choose units for the global energy chart">
+                                    <option value="mtoe">Mtoe</option>
+                                    <option value="twh">TWh</option>
+                                    <option value="ej">EJ</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="energyCarrierChart" role="img" aria-label="Doughnut chart of global total final energy consumption by carrier, in Mtoe"></canvas>
+                    </div>
+                    <div id="energyChartLegend" class="mt-3 grid grid-cols-2 gap-1 text-[11px] sm:grid-cols-3" aria-label="Toggle energy carriers in the chart">
+                        <button type="button" class="chart-legend-btn" data-energy-index="0" aria-pressed="true" aria-label="Toggle refined liquid petroleum"><span class="chart-legend-swatch" style="background:#2f9c6a"></span><span>Refined petroleum</span></button>
+                        <button type="button" class="chart-legend-btn" data-energy-index="1" aria-pressed="true" aria-label="Toggle electricity supply"><span class="chart-legend-swatch" style="background:#48bf8b"></span><span>Electricity supply</span></button>
+                        <button type="button" class="chart-legend-btn" data-energy-index="2" aria-pressed="true" aria-label="Toggle natural gas"><span class="chart-legend-swatch" style="background:#36aa9d"></span><span>Natural gas</span></button>
+                        <button type="button" class="chart-legend-btn" data-energy-index="3" aria-pressed="true" aria-label="Toggle biofuels and solid waste"><span class="chart-legend-swatch" style="background:#d8ad56"></span><span>Biofuels &amp; solid waste</span></button>
+                        <button type="button" class="chart-legend-btn" data-energy-index="4" aria-pressed="true" aria-label="Toggle direct end-use coal"><span class="chart-legend-swatch" style="background:#71877b"></span><span>Direct end-use coal</span></button>
+                        <button type="button" class="chart-legend-btn" data-energy-index="5" aria-pressed="true" aria-label="Toggle other energy forms"><span class="chart-legend-swatch" style="background:#73aeb0"></span><span>Other energy forms</span></button>
+                    </div>
+                    <p id="energyChartLive" class="sr-only" aria-live="polite">Chart shows all six energy carriers in Mtoe.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: GLOBAL PLASTIC POLLUTION & TOXIC EXPOSURE -->
+        <section id="pollution-impact" class="space-y-6">
+            <div class="border-l-4 border-rose-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Global Plastic Pollution & Toxic Exposure</h2>
+                <p class="text-xs text-slate-400 mt-1">Health, environmental, and economic burden estimates reported in the supplied assessment.</p>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="rounded-xl border border-rose-500/30 bg-gradient-to-br from-rose-950/50 to-slate-900 p-4">
+                    <div class="text-xs font-medium text-slate-400">Plastic Production</div>
+                    <div class="mt-1 text-2xl font-black text-rose-300">430 <span class="text-xs font-normal text-slate-400">Mt/yr</span></div>
+                    <div class="mt-1 text-[11px] text-slate-500">2026 estimate in the PDF</div>
+                </div>
+                <div class="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 to-slate-900 p-4">
+                    <div class="text-xs font-medium text-slate-400">Plastic Entering Oceans</div>
+                    <div class="mt-1 text-2xl font-black text-amber-300">11 <span class="text-xs font-normal text-slate-400">Mt/yr</span></div>
+                    <div class="mt-1 text-[11px] text-slate-500">Annual inflow estimate</div>
+                </div>
+                <div class="rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-950/40 to-slate-900 p-4">
+                    <div class="text-xs font-medium text-slate-400">Modeled Mortality</div>
+                    <div class="mt-1 text-2xl font-black text-orange-300">0.75–1.52 <span class="text-xs font-normal text-slate-400">million/yr</span></div>
+                    <div class="mt-1 text-[11px] text-slate-500">Sum of pathway table estimates</div>
+                </div>
+                <div class="rounded-xl border border-fuchsia-500/30 bg-gradient-to-br from-fuchsia-950/40 to-slate-900 p-4">
+                    <div class="text-xs font-medium text-slate-400">Estimated Annual Burden</div>
+                    <div class="mt-1 text-2xl font-black text-fuchsia-300">~$1.5 <span class="text-xs font-normal text-slate-400">trillion</span></div>
+                    <div class="mt-1 text-[11px] text-slate-500">Health & environmental costs</div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 md:p-6">
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-slate-200">Major Health-Impact Pathways in the Assessment</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">Illustrative midpoint estimates from the supplied PDF; pathway estimates may overlap and should not be interpreted as independently verified causal totals.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <div class="rounded-xl border border-rose-500/20 bg-slate-950/70 p-4">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-rose-300">Open burning</div>
+                        <div class="mt-2 text-lg font-bold text-white">325,000</div>
+                        <div class="text-[11px] text-slate-400">midpoint deaths/yr</div>
+                        <div class="mt-3 border-t border-slate-800 pt-2 text-[11px] text-slate-500">Range: 200,000–450,000 · Cost: $350B</div>
+                    </div>
+                    <div class="rounded-xl border border-amber-500/20 bg-slate-950/70 p-4">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-amber-300">Heavy-metal additives</div>
+                        <div class="mt-2 text-lg font-bold text-white">225,000</div>
+                        <div class="text-[11px] text-slate-400">midpoint deaths/yr</div>
+                        <div class="mt-3 border-t border-slate-800 pt-2 text-[11px] text-slate-500">Range: 150,000–300,000 · Cost: $250B</div>
+                    </div>
+                    <div class="rounded-xl border border-orange-500/20 bg-slate-950/70 p-4">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-orange-300">Fine-particle air pollution</div>
+                        <div class="mt-2 text-lg font-bold text-white">175,000</div>
+                        <div class="text-[11px] text-slate-400">midpoint deaths/yr</div>
+                        <div class="mt-3 border-t border-slate-800 pt-2 text-[11px] text-slate-500">Range: 150,000–200,000 · Cost: $210B</div>
+                    </div>
+                    <div class="rounded-xl border border-fuchsia-500/20 bg-slate-950/70 p-4">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-300">Plastic additives & endocrine disruptors</div>
+                        <div class="mt-2 text-lg font-bold text-white">175,000</div>
+                        <div class="text-[11px] text-slate-400">midpoint deaths/yr</div>
+                        <div class="mt-3 border-t border-slate-800 pt-2 text-[11px] text-slate-500">Range: 100,000–250,000 · Cost: $450B</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-cyan-500/20 bg-cyan-950/20 px-4 py-3 text-xs leading-relaxed text-slate-300">
+                <strong class="text-cyan-300">Why it matters:</strong> The assessment identifies unmanaged-waste burning as a major impact pathway; reducing uncontrolled disposal and burning can address that exposure route. This is context for the project, not a claim that ATT alone resolves plastic-related health risks.
+            </div>
+            <div class="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 p-5 md:p-6">
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-5">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-300">India Spotlight · 2018</p>
+                        <h3 class="mt-1 text-lg font-bold text-white">DEHP & Cardiovascular Health</h3>
+                        <p class="mt-1 text-xs text-slate-400">Study population: adults aged 55–64 · Country-level modeled estimates</p>
+                    </div>
+                    <span class="w-fit rounded-full border border-indigo-400/20 bg-indigo-400/10 px-3 py-1 text-[10px] font-semibold text-indigo-200">Phthalate used in flexible plastics</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="rounded-xl border border-indigo-400/20 bg-slate-950/70 p-4">
+                        <div class="text-xs text-slate-400">Estimated CVD deaths linked to DEHP exposure</div>
+                        <div class="mt-2 text-2xl font-black text-indigo-200">103,587</div>
+                        <div class="mt-1 text-[10px] text-slate-500">India · 2018 estimate</div>
+                    </div>
+                    <div class="rounded-xl border border-indigo-400/20 bg-slate-950/70 p-4">
+                        <div class="text-xs text-slate-400">Share of the global modeled total</div>
+                        <div class="mt-2 text-2xl font-black text-indigo-200">29.1%</div>
+                        <div class="mt-1 text-[10px] text-slate-500">103,587 of 356,238 estimated deaths</div>
+                    </div>
+                    <div class="rounded-xl border border-indigo-400/20 bg-slate-950/70 p-4">
+                        <div class="text-xs text-slate-400">Years of life lost (YLL)</div>
+                        <div class="mt-2 text-2xl font-black text-indigo-200">2.90M</div>
+                        <div class="mt-1 text-[10px] text-slate-500">2,904,389 estimated years</div>
+                    </div>
+                    <div class="rounded-xl border border-indigo-400/20 bg-slate-950/70 p-4">
+                        <div class="text-xs text-slate-400">Estimated India economic impact</div>
+                        <div class="mt-2 text-2xl font-black text-indigo-200">$100B+</div>
+                        <div class="mt-1 text-[10px] text-slate-500">Healthcare, productivity, and premature-death costs</div>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed">
+                    <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-slate-300">
+                        <strong class="text-indigo-200">Potential exposure settings noted in the workbook:</strong> flexible-PVC food-contact materials, medical tubing/devices, and indoor dust from vinyl building materials.
+                    </div>
+                    <div class="rounded-xl border border-amber-500/20 bg-amber-950/20 p-4 text-slate-300">
+                        <strong class="text-amber-200">Interpretation:</strong> These are modeled population estimates, not individually confirmed deaths or proof of direct causation. The paper notes uncertainty in exposure–response estimates and the need for further research.
+                    </div>
+                </div>
+                <div class="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-xs leading-relaxed text-slate-300">
+                    <strong class="text-cyan-200">Global context from the supplied workbook:</strong> The workbook estimates 356,238 DEHP-attributable CVD deaths globally and 10.5M+ years of life lost. Its country breakdown lists India (103,587 deaths), China (60,937), Indonesia (30,500), the United States & others (45,000), and the rest of the world (116,214). Reported exposure settings include flexible-PVC food packaging, medical PVC tubing, vinyl flooring and cables, indoor dust, personal-care products, and flexible consumer plastics.
+                </div>
+                <p class="mt-4 text-[10px] leading-relaxed text-slate-500">Source: Hyman et al., “Phthalate exposure from plastics and cardiovascular disease,” <em>eBioMedicine</em> (2025), 117:105730. <a class="text-indigo-300 underline hover:text-indigo-200" href="https://doi.org/10.1016/j.ebiom.2025.105730" target="_blank" rel="noopener noreferrer">Read the peer-reviewed study</a>.</p>
+                <p class="mt-2 text-[10px] leading-relaxed text-slate-500">Workbook note: the $100B+ India economic estimate and the global country breakdown are reproduced from the user-provided <em>India_DEHP_Lancet_Heart_Disease_Study.xlsx</em>. These are modeled population estimates and should be checked against the original study before formal use.</p>
+            </div>
+            <p class="text-[10px] leading-relaxed text-slate-500">Source: user-provided <em>Global Plastic Pollution & Toxic Exposure Health Assessment</em> PDF. Internal consistency note: the PDF’s headline mortality estimate (158,000 to 1,000,000+) differs from its pathway-table total (750,000–1,520,000; midpoint 1,135,000). Its headline economic estimate ($1.51T/yr) also differs slightly from the pathway-cost sum ($1.55T/yr). Figures are reproduced as estimates from the supplied document; its methodology and references were not provided here.</p>
+        </section>
+
+        <!-- SUPPLEMENTAL SECTION: TRAJECTORY, REGIONAL ESTIMATES & WILDLIFE -->
+        <section id="wildlife" class="space-y-6">
+            <div class="border-l-4 border-amber-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Plastic-Crisis Trajectory, Regional Estimates &amp; Wildlife</h2>
+                <p class="mt-1 text-xs text-slate-400">Additional figures from the supplied impact assessment; preserved as source-reported estimates, not independent findings.</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 md:p-6 space-y-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-200">Additional health pathways listed in the supplied assessment</h3>
+                    <p class="text-[11px] text-slate-500">Source-reported modeled estimates only. The source does not provide enough methods to independently validate these figures; pathways may overlap, so do not add them to the headline total.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <article class="rounded-xl border border-orange-500/20 bg-slate-950/70 p-4"><h4 class="font-bold text-orange-300">Occupational petrochemical hazards</h4><p class="mt-2 text-slate-300">80,000–120,000 deaths/yr</p><p class="mt-1 text-slate-400">Midpoint in source: 100,000 · Cost estimate: $150B</p></article>
+                        <article class="rounded-xl border border-rose-500/20 bg-slate-950/70 p-4"><h4 class="font-bold text-rose-300">Microplastics bioaccumulation</h4><p class="mt-2 text-slate-300">50,000–150,000 deaths/yr</p><p class="mt-1 text-slate-400">Midpoint in source: 100,000 · Cost estimate: $100B</p></article>
+                        <article class="rounded-xl border border-sky-500/20 bg-slate-950/70 p-4"><h4 class="font-bold text-sky-300">Marine debris &amp; pathogens</h4><p class="mt-2 text-slate-300">20,000–50,000 deaths/yr</p><p class="mt-1 text-slate-400">Midpoint in source: 35,000 · Cost estimate: $40B</p></article>
+                    </div>
+                    <h3 class="text-sm font-semibold text-slate-200 mt-6">Assessment trajectory milestones</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">“Without caps” values are the supplied assessment’s scenario, not a consensus forecast. The economic-loss labels and time basis need confirmation from the original source.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <article class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                        <h4 class="font-bold text-cyan-300">2026 baseline (assessment)</h4>
+                        <p class="mt-2 text-slate-300">430 Mt plastic production</p>
+                        <p class="mt-1 text-slate-400">620,000 modeled deaths/yr</p>
+                        <p class="mt-1 text-slate-500">Economic-loss figure in source: $1.50T</p>
+                    </article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                        <h4 class="font-bold text-amber-300">2030 business-as-usual (assessment)</h4>
+                        <p class="mt-2 text-slate-300">500 Mt plastic production</p>
+                        <p class="mt-1 text-slate-400">750,000 modeled deaths/yr</p>
+                        <p class="mt-1 text-slate-500">Economic-loss figure in source: $2.10T</p>
+                    </article>
+                    <article class="rounded-xl border border-rose-500/30 bg-slate-950/70 p-4">
+                        <h4 class="font-bold text-rose-300">2060 without caps (assessment)</h4>
+                        <p class="mt-2 text-slate-300">1,200 Mt plastic production</p>
+                        <p class="mt-1 text-slate-400">1,500,000 modeled deaths/yr</p>
+                        <p class="mt-1 text-slate-500">Economic-loss figure in source: $6.80T</p>
+                    </article>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 md:p-6 space-y-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-200">Regional indicators reported in the supplied table</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">Denominator, year, and calculation method were not included in the supplemental HTML. Do not interpret these as verified regional prevalence or comparative risk estimates.</p>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <caption class="sr-only">Unverified regional estimates reproduced from the supplied impact assessment</caption>
+                        <thead><tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400">
+                            <th scope="col" class="p-2.5">Region</th><th scope="col" class="p-2.5 text-right">Mismanaged-plastic share (source)</th><th scope="col" class="p-2.5 text-right">Modeled deaths per 100,000 (source)</th><th scope="col" class="p-2.5">Primary factor listed</th><th scope="col" class="p-2.5">Policy target listed</th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">Sub-Saharan Africa</th><td class="p-2.5 text-right font-mono">85%</td><td class="p-2.5 text-right font-mono">18.4</td><td class="p-2.5 text-slate-400">Open dumping &amp; burning</td><td class="p-2.5 text-slate-400">Production caps &amp; export bans</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">South Asia</th><td class="p-2.5 text-right font-mono">78%</td><td class="p-2.5 text-right font-mono">22.1</td><td class="p-2.5 text-slate-400">Air pollution &amp; unregulated recycling</td><td class="p-2.5 text-slate-400">Technology transfer &amp; infrastructure</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">East Asia &amp; Pacific</th><td class="p-2.5 text-right font-mono">60%</td><td class="p-2.5 text-right font-mono">14.5</td><td class="p-2.5 text-slate-400">Petrochemical refining</td><td class="p-2.5 text-slate-400">Additive disclosure</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">Latin America &amp; Caribbean</th><td class="p-2.5 text-right font-mono">52%</td><td class="p-2.5 text-right font-mono">9.2</td><td class="p-2.5 text-slate-400">Landfill runoff</td><td class="p-2.5 text-slate-400">Single-use plastic restrictions</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">Middle East &amp; North Africa</th><td class="p-2.5 text-right font-mono">65%</td><td class="p-2.5 text-right font-mono">11.8</td><td class="p-2.5 text-slate-400">Industrial emissions</td><td class="p-2.5 text-slate-400">Emission standards</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">Europe &amp; Central Asia</th><td class="p-2.5 text-right font-mono">12%</td><td class="p-2.5 text-right font-mono">4.1</td><td class="p-2.5 text-slate-400">Endocrine disruptors</td><td class="p-2.5 text-slate-400">Chemical restrictions &amp; EPR</td></tr>
+                            <tr><th scope="row" class="p-2.5 font-medium text-slate-200">North America</th><td class="p-2.5 text-right font-mono">8%</td><td class="p-2.5 text-right font-mono">3.8</td><td class="p-2.5 text-slate-400">Fenceline exposure</td><td class="p-2.5 text-slate-400">Binding reduction caps</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-200">Wildlife impacts listed in the supplemental assessment</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">Some entries are impact estimates, not deaths; local animal counts are explicitly uncounted in the source.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Seabirds · global</h4><p class="mt-2 text-base font-bold text-amber-300">~1 million deaths/yr (source estimate)</p><p class="mt-1 text-xs leading-relaxed text-slate-400">Ingestion and entanglement are the impact pathways described in the supplied material.</p></article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Marine mammals · global</h4><p class="mt-2 text-base font-bold text-amber-300">~100,000 deaths/yr (source estimate)</p><p class="mt-1 text-xs leading-relaxed text-slate-400">The source cites ghost-gear entanglement and ingestion; methods and coverage are not supplied.</p></article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Sea turtles · global</h4><p class="mt-2 text-base font-bold text-amber-300">~50% impacted (source claim)</p><p class="mt-1 text-xs leading-relaxed text-slate-400">This is an impact proportion, not a mortality rate; the source refers to plastic ingestion and obstruction.</p></article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Stray and urban cattle · India</h4><p class="mt-2 text-base font-bold text-amber-300">“Tens of thousands/yr” (source estimate)</p><p class="mt-1 text-xs leading-relaxed text-slate-400">Plastic ingestion while foraging at dumps; the source does not provide a counting method.</p></article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Elephants and deer · India</h4><p class="mt-2 text-base font-bold text-amber-300">No annual death count given</p><p class="mt-1 text-xs leading-relaxed text-slate-400">The supplied material describes exposure near dumps and cites plastic in some elephant-dung samples in Uttarakhand.</p></article>
+                    <article class="rounded-xl border border-slate-800 bg-slate-900 p-4"><h4 class="text-sm font-bold text-white">Dogs, pigs, and goats · India</h4><p class="mt-2 text-base font-bold text-amber-300">Uncounted in source</p><p class="mt-1 text-xs leading-relaxed text-slate-400">The source describes packaging ingestion and possible obstruction or other health impacts.</p></article>
+                </div>
+            </div>
+            <p class="text-[10px] leading-relaxed text-slate-500">Source: user-provided <em>ATT Impact, Wildlife and By-product Sections</em> HTML. Underlying source documents and methods were not included with that file; all estimates above are reproduced with that limitation.</p>
+        </section>
+
+        <!-- SECTION 2: 6-STAGE PROCESS FLOW BLUEPRINT -->
+        <section id="blueprint" class="space-y-6">
+            <div class="border-l-4 border-cyan-500 pl-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Conceptual Plastic-to-Hydrogen Process Flow</h2>
+                    <p class="text-xs text-slate-400 mt-1">The presentation discusses ATT alongside conventional thermal conversion/gasification, condensation, and purification. This combined flow is illustrative—not a validated or demonstrated integrated plant design.</p>
+                </div>
+                <div class="flex items-center space-x-2 text-xs">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60 font-mono text-[11px]">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span> CONCEPTUAL FLOW · NOT LIVE DATA
+                    </span>
+                </div>
+            </div>
+
+            <style>
+                .blueprint-container {
+                    background-color: #07192e;
+                    background-image: 
+                        linear-gradient(to right, rgba(56, 189, 248, 0.12) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(56, 189, 248, 0.12) 1px, transparent 1px);
+                    background-size: 24px 24px;
+                    border: 2px solid rgba(56, 189, 248, 0.35);
+                    box-shadow: 0 0 30px rgba(6, 182, 212, 0.15) inset;
+                }
+                @keyframes flowLine {
+                    from { stroke-dashoffset: 24; }
+                    to { stroke-dashoffset: 0; }
+                }
+                .pipe-flow {
+                    stroke-dasharray: 8, 4;
+                    animation: flowLine 1.2s linear infinite;
+                }
+                .blueprint-node {
+                    transition: all 0.25s ease;
+                    cursor: pointer;
+                }
+                .blueprint-node:hover {
+                    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+                }
+            </style>
+
+            <!-- Blueprint Graphic Container -->
+            <div class="blueprint-container rounded-2xl p-4 md:p-6 text-sky-100 relative overflow-hidden">
+                <!-- Blueprint Header Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-sky-400/30 pb-4 mb-4 gap-3">
+                    <div>
+                        <div class="text-xl md:text-2xl font-black tracking-wider text-white flex items-center gap-2">
+                            <span>WASTE-TO-HYDROGEN CONCEPT</span>
+                        </div>
+                        <div class="text-xs font-semibold text-cyan-300 tracking-wide mt-0.5">
+                            HYDROGEN PRODUCTION FROM PLASTIC WASTE
+                        </div>
+                        <div class="text-[11px] font-mono text-sky-300/80 mt-1 flex items-center gap-2">
+                            <span>RECYCLE</span> <span>→</span> <span>PURIFY</span> <span>→</span> <span>CONVERT</span> <span>→</span> <span>CLEAN</span> <span>→</span> <span>STORE</span>
+                        </div>
+                    </div>
+                    <div class="border border-sky-400/50 bg-sky-950/60 px-4 py-2 rounded text-right">
+                        <div class="text-[10px] font-mono tracking-widest text-sky-300 uppercase">Engineering Spec</div>
+                        <div class="text-xs font-bold text-white tracking-wider">PROCESS FLOW DIAGRAM</div>
+                    </div>
+                </div>
+
+                <!-- SVG Blueprint Canvas -->
+                <div class="overflow-x-auto custom-scrollbar py-2">
+                    <svg viewBox="0 0 1200 380" role="img" aria-label="Conceptual six-stage plastic-to-hydrogen process flow; scroll horizontally to inspect the diagram" class="w-full min-w-[1000px] h-auto font-sans" style="font-family: monospace;">
+                        <defs>
+                            <!-- Arrowhead Marker -->
+                            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+                            </marker>
+                            <marker id="arrow-down" viewBox="0 0 10 10" refX="5" refY="6" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 1 0 L 5 10 L 9 0 z" fill="#38bdf8" />
+                            </marker>
+                        </defs>
+
+                        <!-- STAGE 1: SHREDDER MACHINE -->
+                        <g class="blueprint-node" onclick="selectStage(1)">
+                            <!-- Number Bubble -->
+                            <circle cx="95" cy="32" r="14" fill="#07192e" stroke="#38bdf8" stroke-width="2"/>
+                            <text x="95" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+                            <text x="95" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">SHREDDER MACHINE</text>
+
+                            <!-- Feed Arrow In -->
+                            <path d="M 15 160 L 42 160" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+                            <text x="10" y="148" fill="#e0f2fe" font-size="9">Plastic Waste</text>
+                            <text x="10" y="157" fill="#e0f2fe" font-size="9">(In)</text>
+
+                            <!-- Shredder Graphic -->
+                            <!-- Hopper -->
+                            <polygon points="45,100 115,100 95,150 65,150" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="55" y1="100" x2="105" y2="100" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,3"/>
+                            <!-- Blades Housing -->
+                            <rect x="52" y="150" width="56" height="45" rx="3" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <circle cx="70" cy="172" r="10" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+                            <circle cx="90" cy="172" r="10" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+                            <!-- Motor Unit -->
+                            <rect x="108" y="160" width="28" height="28" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="114" y1="165" x2="130" y2="183" stroke="#38bdf8" stroke-width="1.5"/>
+                            <line x1="130" y1="165" x2="114" y2="183" stroke="#38bdf8" stroke-width="1.5"/>
+                            <!-- Base Frame -->
+                            <line x1="50" y1="195" x2="50" y2="240" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="110" y1="195" x2="110" y2="240" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="40" y1="240" x2="120" y2="240" stroke="#ffffff" stroke-width="2"/>
+                        </g>
+
+                        <!-- PIPE 1 -> 2 -->
+                        <g>
+                            <path d="M 115 172 L 185 172" stroke="#ffffff" stroke-width="3" />
+                            <path d="M 115 172 L 185 172" stroke="#38bdf8" stroke-width="1.5" class="pipe-flow" />
+                            <text x="150" y="158" fill="#e0f2fe" font-size="8.5" text-anchor="middle">Shredded Plastic</text>
+                            <text x="150" y="167" fill="#e0f2fe" font-size="8.5" text-anchor="middle">(Feed) →</text>
+                        </g>
+
+                        <!-- STAGE 2: PLASTIC PURIFIER -->
+                        <g class="blueprint-node" onclick="selectStage(2)">
+                            <!-- Number Bubble -->
+                            <circle cx="250" cy="32" r="14" fill="#07192e" stroke="#38bdf8" stroke-width="2"/>
+                            <text x="250" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+                            <text x="250" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">PLASTIC PURIFIER</text>
+
+                            <!-- Purifier Graphic -->
+                            <!-- Tank 1 -->
+                            <rect x="190" y="125" width="40" height="85" rx="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="200" y="105" width="20" height="20" rx="2" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+                            <!-- Inter-tank connection -->
+                            <line x1="230" y1="140" x2="250" y2="140" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="230" y1="180" x2="250" y2="180" stroke="#ffffff" stroke-width="2"/>
+                            <!-- Tank 2 -->
+                            <rect x="250" y="125" width="40" height="85" rx="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="260" y="105" width="20" height="20" rx="2" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+                            <!-- Control Panel -->
+                            <rect x="295" y="150" width="22" height="35" rx="2" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                            <circle cx="306" cy="160" r="2" fill="#38bdf8"/>
+                            <circle cx="306" cy="168" r="2" fill="#38bdf8"/>
+                            <circle cx="306" cy="176" r="2" fill="#38bdf8"/>
+                            <!-- Frame & Drain -->
+                            <line x1="185" y1="210" x2="310" y2="210" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="200" y1="210" x2="200" y2="240" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="280" y1="210" x2="280" y2="240" stroke="#ffffff" stroke-width="2"/>
+                            <!-- Bottom Waste Outlet -->
+                            <path d="M 260 210 L 260 270" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-down)"/>
+                            <text x="260" y="285" fill="#cbd5e1" font-size="8" text-anchor="middle">Impurities &amp;</text>
+                            <text x="260" y="294" fill="#cbd5e1" font-size="8" text-anchor="middle">Non-condensables</text>
+                        </g>
+
+                        <!-- PIPE 2 -> 3 -->
+                        <g>
+                            <path d="M 315 172 L 380 172" stroke="#ffffff" stroke-width="3" />
+                            <path d="M 315 172 L 380 172" stroke="#38bdf8" stroke-width="1.5" class="pipe-flow" />
+                            <text x="347" y="158" fill="#e0f2fe" font-size="8.5" text-anchor="middle">Purified Plastic</text>
+                            <text x="347" y="167" fill="#e0f2fe" font-size="8.5" text-anchor="middle">(Feed) →</text>
+                        </g>
+
+                        <!-- STAGE 3: PYROLYSIS CHAMBER -->
+                        <g class="blueprint-node" onclick="selectStage(3)">
+                            <!-- Number Bubble -->
+                            <circle cx="465" cy="32" r="14" fill="#07192e" stroke="#10b981" stroke-width="2"/>
+                            <text x="465" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+                            <text x="465" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">ATT REACTOR (CONCEPTUAL)</text>
+
+                            <!-- Horizontal Pressure Vessel -->
+                            <rect x="390" y="135" width="150" height="65" rx="30" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="415" y1="135" x2="415" y2="200" stroke="#38bdf8" stroke-width="1.5"/>
+                            <line x1="515" y1="135" x2="515" y2="200" stroke="#38bdf8" stroke-width="1.5"/>
+                            <rect x="425" y="150" width="80" height="35" rx="3" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3,3"/>
+                            
+                            <!-- Support Saddles -->
+                            <path d="M 410 200 L 400 240 L 430 240 Z" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <path d="M 520 200 L 510 240 L 540 240 Z" fill="none" stroke="#ffffff" stroke-width="2"/>
+
+                            <!-- Cooling Water Loop underneath -->
+                            <path d="M 380 250 L 540 250" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                            <path d="M 540 250 L 530 246 M 540 250 L 530 254" stroke="#38bdf8" stroke-width="1.5"/>
+                            <path d="M 380 250 L 390 246 M 380 250 L 390 254" stroke="#38bdf8" stroke-width="1.5"/>
+                            <text x="460" y="263" fill="#93c5fd" font-size="8" text-anchor="middle">Cooling Water (In/Out) ↔</text>
+
+                            <!-- Top Vapor Outlet Pipe -->
+                            <path d="M 465 135 L 465 95 L 590 95 L 590 130" stroke="#ffffff" stroke-width="3" fill="none"/>
+                            <path d="M 465 135 L 465 95 L 590 95 L 590 130" stroke="#34d399" stroke-width="1.5" fill="none" class="pipe-flow"/>
+                            <text x="515" y="88" fill="#a7f3d0" font-size="8.5" text-anchor="middle">Hot Vapors (From Pyrolysis) →</text>
+                        </g>
+
+                        <!-- STAGE 4: CONDENSER CHAMBER -->
+                        <g class="blueprint-node" onclick="selectStage(4)">
+                            <!-- Number Bubble -->
+                            <circle cx="620" cy="32" r="14" fill="#07192e" stroke="#38bdf8" stroke-width="2"/>
+                            <text x="620" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+                            <text x="620" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CONDENSER CHAMBER</text>
+
+                            <!-- Vertical Condenser Vessel -->
+                            <rect x="580" y="130" width="55" height="80" rx="8" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <!-- Internal Coil -->
+                            <path d="M 590 145 Q 625 150 590 160 Q 625 170 590 180 Q 625 190 590 200" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+                            <!-- Side Accumulator Tank -->
+                            <rect x="645" y="155" width="30" height="55" rx="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="635" y1="170" x2="645" y2="170" stroke="#ffffff" stroke-width="2"/>
+                            
+                            <!-- Condensed Liquid Annotation -->
+                            <text x="635" y="118" fill="#e0f2fe" font-size="8" text-anchor="middle">Condensed Liquids</text>
+                            <text x="635" y="126" fill="#e0f2fe" font-size="8" text-anchor="middle">(Bio-oil / Byproducts)</text>
+
+                            <!-- Condensate Drain -->
+                            <path d="M 660 210 L 660 270" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-down)"/>
+                            <text x="660" y="285" fill="#cbd5e1" font-size="8" text-anchor="middle">Condensate Outlet</text>
+                            <text x="660" y="294" fill="#cbd5e1" font-size="8" text-anchor="middle">(To Collection)</text>
+                        </g>
+
+                        <!-- PIPE 4 -> 5 -->
+                        <g>
+                            <path d="M 635 150 L 735 150" stroke="#ffffff" stroke-width="3" />
+                            <path d="M 635 150 L 735 150" stroke="#38bdf8" stroke-width="1.5" class="pipe-flow" />
+                        </g>
+
+                        <!-- STAGE 5: NATURAL GAS PURIFIER -->
+                        <g class="blueprint-node" onclick="selectStage(5)">
+                            <!-- Number Bubble -->
+                            <circle cx="780" cy="32" r="14" fill="#07192e" stroke="#38bdf8" stroke-width="2"/>
+                            <text x="780" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">5</text>
+                            <text x="780" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">H₂ PURIFICATION (CONCEPTUAL)</text>
+
+                            <!-- PSA Scrubber Towers -->
+                            <rect x="735" y="120" width="18" height="90" rx="3" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="758" y="120" width="18" height="90" rx="3" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="781" y="120" width="18" height="90" rx="3" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="804" y="120" width="18" height="90" rx="3" fill="none" stroke="#ffffff" stroke-width="2"/>
+
+                            <!-- Top/Bottom Header Pipes -->
+                            <line x1="730" y1="130" x2="827" y2="130" stroke="#38bdf8" stroke-width="2"/>
+                            <line x1="730" y1="200" x2="827" y2="200" stroke="#38bdf8" stroke-width="2"/>
+
+                            <!-- Control Panel Box -->
+                            <rect x="830" y="160" width="22" height="35" rx="2" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                            <circle cx="841" cy="170" r="2" fill="#38bdf8"/>
+                            <circle cx="841" cy="178" r="2" fill="#38bdf8"/>
+
+                            <!-- Bottom Impurities Drain -->
+                            <path d="M 781 210 L 781 270" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-down)"/>
+                            <text x="781" y="285" fill="#cbd5e1" font-size="8" text-anchor="middle">Impurities (H₂S, CO₂,</text>
+                            <text x="781" y="294" fill="#cbd5e1" font-size="8" text-anchor="middle">Moisture, etc.) (Out)</text>
+                        </g>
+
+                        <!-- PIPE 5 -> 6 -->
+                        <g>
+                            <path d="M 852 150 L 925 150" stroke="#ffffff" stroke-width="3" />
+                            <path d="M 852 150 L 925 150" stroke="#38bdf8" stroke-width="1.5" class="pipe-flow" />
+                            <text x="888" y="136" fill="#e0f2fe" font-size="8.5" text-anchor="middle">Clean Gas</text>
+                            <text x="888" y="145" fill="#e0f2fe" font-size="8.5" text-anchor="middle">(After Purification) →</text>
+                        </g>
+
+                        <!-- STAGE 6: STORAGE SYSTEM OF H2 -->
+                        <g class="blueprint-node" onclick="selectStage(6)">
+                            <!-- Number Bubble -->
+                            <circle cx="985" cy="32" r="14" fill="#07192e" stroke="#fbbf24" stroke-width="2"/>
+                            <text x="985" y="37" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">6</text>
+                            <text x="985" y="60" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">STORAGE SYSTEM OF H2</text>
+
+                            <!-- High Pressure Cylinder Storage Bank -->
+                            <rect x="928" y="115" width="24" height="95" rx="12" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="957" y="115" width="24" height="95" rx="12" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="986" y="115" width="24" height="95" rx="12" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <rect x="1015" y="115" width="24" height="95" rx="12" fill="none" stroke="#ffffff" stroke-width="2"/>
+
+                            <!-- Manifold Top Piping & Valves -->
+                            <line x1="920" y1="110" x2="1030" y2="110" stroke="#fbbf24" stroke-width="2"/>
+                            <circle cx="940" cy="110" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                            <circle cx="969" cy="110" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                            <circle cx="998" cy="110" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+                            <!-- Output Compressed Gas Pipe -->
+                            <path d="M 1030 110 L 1080 110" stroke="#fbbf24" stroke-width="3" />
+                            <path d="M 1030 110 L 1080 110" stroke="#ffffff" stroke-width="1.5" class="pipe-flow" marker-end="url(#arrow)" />
+                            <text x="1055" y="96" fill="#fef08a" font-size="9" text-anchor="middle">H₂ (Compressed)</text>
+                            <text x="1055" y="105" fill="#fef08a" font-size="9" text-anchor="middle">Pressure TBD →</text>
+
+                            <!-- Storage Skid Base -->
+                            <line x1="920" y1="210" x2="1035" y2="210" stroke="#ffffff" stroke-width="2"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Blueprint Bottom Badge Cards (Matching Diagram Layout) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-sky-400/30">
+                    <!-- Stage 1 Card -->
+                    <div id="stage-card-1" onclick="selectStage(1)" class="bg-sky-950/60 border border-sky-400/30 rounded-xl p-3 hover:border-cyan-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs flex items-center justify-center border border-cyan-400/40">1</span>
+                            <span class="text-xs font-bold text-white">SHREDDER MACHINE</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            Proposed hopper-fed, high-torque shredding with a sizing screen to produce more uniform flakes.
+                        </p>
+                    </div>
+
+                    <!-- Stage 2 Card -->
+                    <div id="stage-card-2" onclick="selectStage(2)" class="bg-sky-950/60 border border-sky-400/30 rounded-xl p-3 hover:border-cyan-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs flex items-center justify-center border border-cyan-400/40">2</span>
+                            <span class="text-xs font-bold text-white">PLASTIC PURIFIER</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            Proposed hot/friction washing, float-sink density separation, and dewatering to reduce moisture before thermal processing.
+                        </p>
+                    </div>
+
+                    <!-- Stage 3 Card -->
+                    <div id="stage-card-3" role="button" tabindex="0" aria-pressed="true" onclick="selectStage(3)" class="bg-sky-950/60 border border-emerald-500/40 rounded-xl p-3 hover:border-emerald-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-400/40">3</span>
+                            <span class="text-xs font-bold text-white">ATT REACTOR (CONCEPTUAL)</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            The speech proposes 600–700°C treatment of plastic with NaOH and water; these are project-design assumptions. The outlet gas is a mixture, not purified hydrogen.
+                        </p>
+                    </div>
+
+                    <!-- Stage 4 Card -->
+                    <div id="stage-card-4" onclick="selectStage(4)" class="bg-sky-950/60 border border-sky-400/30 rounded-xl p-3 hover:border-cyan-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs flex items-center justify-center border border-cyan-400/40">4</span>
+                            <span class="text-xs font-bold text-white">CONDENSER CHAMBER</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            Cools the gas mixture so heavier vapors can condense; the remaining gas still needs hydrogen separation and purification.
+                        </p>
+                    </div>
+
+                    <!-- Stage 5 Card -->
+                    <div id="stage-card-5" onclick="selectStage(5)" class="bg-sky-950/60 border border-sky-400/30 rounded-xl p-3 hover:border-cyan-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs flex items-center justify-center border border-cyan-400/40">5</span>
+                            <span class="text-xs font-bold text-white">H₂ PURIFICATION (CONCEPTUAL)</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            Illustrative gas cleanup stage; actual contaminants, purity target, and equipment require testing.
+                        </p>
+                    </div>
+
+                    <!-- Stage 6 Card -->
+                    <div id="stage-card-6" onclick="selectStage(6)" class="bg-sky-950/60 border border-amber-500/40 rounded-xl p-3 hover:border-amber-400 transition cursor-pointer">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center justify-center border border-amber-400/40">6</span>
+                            <span class="text-xs font-bold text-white">STORAGE SYSTEM OF H2</span>
+                        </div>
+                        <p class="text-[11px] text-sky-200/80 leading-snug">
+                            Compresses and stores purified hydrogen in high-pressure tanks for later use.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Detailed Parameter Display Banner -->
+                <div id="stage-details-box" class="mt-4 p-4 rounded-xl bg-slate-950/80 border border-cyan-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                    <div class="space-y-1">
+                        <div class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider" id="stage-detail-title">SELECTED STAGE: 3. PYROLYSIS CHAMBER</div>
+                        <div class="text-xs text-slate-300" id="stage-detail-desc">Operating Temperature: 600°C–700°C | Feedstock: Purified Polymer Flakes + NaOH + H₂O | Output: Raw H₂ Vapors + Solid Na₂CO₃ Carbonate Formation (Potential)</div>
+                    </div>
+                    <div class="flex gap-2 text-[10px] font-mono text-slate-400">
+                        <span class="px-2 py-1 bg-slate-900 rounded border border-slate-800">Model assumption: <strong class="text-emerald-400" id="stage-detail-eff">70% (illustrative)</strong></span>
+                        <span class="px-2 py-1 bg-slate-900 rounded border border-slate-800">Design basis: <strong class="text-cyan-400" id="stage-detail-press">Not established at scale</strong></span>
+                    </div>
+                </div>
+
+                <!-- Footer Slogan Bar -->
+                <div class="mt-4 pt-3 border-t border-sky-400/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-sky-300/70 font-mono gap-1">
+                    <div>🌱 CLEANER PLANET | ⚡ RENEWABLE ENERGY | 🌍 SUSTAINABLE FUTURE</div>
+                    <div>SYSTEM STATUS: ONLINE & OPERATIONAL</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: PLASTIC FEEDSTOCK CLASSIFICATION MATRIX -->
+        <section id="plastics" class="space-y-6">
+            <div class="border-l-4 border-emerald-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Plastic Feedstock Resin Classification & ATT Yield Dynamics</h2>
+                <p class="text-xs text-slate-400 mt-1">Comparative evaluation of plastic resin types (Resin Codes 1–7), calorific values, and hydrogen yield efficiency.</p>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                The yield values in this comparison are <strong>project assumptions</strong>, not measured outputs for every resin. The cited ATT bench study focused on PET, thermally oxidized PE and PP; the PVC, PS, and mixed “OTHER” values shown here should be treated as unvalidated estimates. Feedstock composition, pretreatment, reagent ratio, and contamination can materially change performance.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg shadow-black/10">
+                    <div>
+                        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-slate-200">Assumed Hydrogen Yield by Resin</h3>
+                                <p id="yieldChartCaption" class="mt-1 text-xs text-slate-400">Project assumptions only; kg H₂ per tonne feedstock equals mass-yield percent × 10.</p>
+                            </div>
+                            <label class="flex flex-col gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400" for="yieldUnitSelect">
+                                Show as
+                                <select id="yieldUnitSelect" class="chart-control normal-case tracking-normal" aria-label="Choose units for the resin hydrogen-yield chart">
+                                    <option value="percent">Mass yield (%)</option>
+                                    <option value="kg-per-tonne">kg H₂ / tonne</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="plasticTypeChart" role="img" aria-label="Bar chart of assumed hydrogen mass yield by plastic resin code, in percent"></canvas>
+                        </div>
+                        <p id="yieldChartLive" class="sr-only" aria-live="polite">Showing assumed hydrogen mass yield as a percentage.</p>
+                    </div>
+                    <div class="mt-4 flex flex-col gap-2 border-t border-slate-800 pt-4 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+                        <span>Highest assumed yield (HDPE): <strong class="text-emerald-400">30.18% H₂ mass</strong></span>
+                        <span>Calorific average: <strong>36.5 MJ/kg</strong></span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <h3 class="text-base font-semibold text-slate-200">Resin Code Classification Matrix</h3>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/60">
+                                    <th class="p-2.5">Code / Polymer</th>
+                                    <th class="p-2.5 text-right">Calorific Value</th>
+                                    <th class="p-2.5 text-right text-emerald-400">Modeled H₂ Yield</th>
+                                    <th class="p-2.5 text-right">Process Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#1 PET (Terephthalate)</td>
+                                    <td class="p-2.5 text-right font-mono">22.5 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.147 kg/kg</td>
+                                    <td class="p-2.5 text-right text-cyan-400">High (100% Na₂CO₃)</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#2 HDPE (High Density PE)</td>
+                                    <td class="p-2.5 text-right font-mono">45.0 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.302 kg/kg</td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">Optimal / Excellent</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#3 PVC (Polyvinyl Chloride)</td>
+                                    <td class="p-2.5 text-right font-mono">19.0 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.135 kg/kg</td>
+                                    <td class="p-2.5 text-right text-amber-400">Requires Scrubbing</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#4 LDPE (Low Density PE)</td>
+                                    <td class="p-2.5 text-right font-mono">43.5 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.298 kg/kg</td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">Optimal / Excellent</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#5 PP (Polypropylene)</td>
+                                    <td class="p-2.5 text-right font-mono">44.5 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.295 kg/kg</td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">Optimal / Excellent</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#6 PS (Polystyrene)</td>
+                                    <td class="p-2.5 text-right font-mono">39.0 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.220 kg/kg</td>
+                                    <td class="p-2.5 text-right text-teal-300">Good / High Aromatic</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="p-2.5 font-medium">#7 OTHER (ABS / Multi-layer)</td>
+                                    <td class="p-2.5 text-right font-mono">30.0 MJ/kg</td>
+                                    <td class="p-2.5 text-right font-mono text-emerald-400 font-bold">0.205 kg/kg</td>
+                                    <td class="p-2.5 text-right text-cyan-400">High Suitability</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: CALORIFIC VALUE BENCHMARK -->
+        <section id="calorific" class="space-y-6">
+            <div class="border-l-4 border-amber-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Calorific Value & Gravimetric Energy Density Benchmark</h2>
+                <p class="text-xs text-slate-400 mt-1">Comparing Lower Heating Values (LHV in MJ/kg) of Hydrogen Gas against conventional fossil fuels and waste feedstocks.</p>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                Hydrogen’s <strong>lower heating value (LHV)</strong> is about 120 MJ/kg; its higher heating value (HHV) is about 141.8 MJ/kg. This is a gravimetric comparison only: hydrogen has low volumetric energy density and requires compression, liquefaction, or chemical conversion. The figure does not represent net energy efficiency or life-cycle carbon intensity of hydrogen made from plastic.
+            </p>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-200">Specific Energy Comparison (MJ / kg)</h3>
+                        <p class="text-xs text-slate-400">Hydrogen gas leads all fuel carriers in gravimetric energy density.</p>
+                    </div>
+                    <div class="px-3 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-mono">
+                        H₂ LHV: 120.0 MJ/kg | HHV: 141.8 MJ/kg
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="calorificChart" role="img" aria-label="Horizontal bar chart comparing lower heating values of hydrogen and selected fuels, in megajoules per kilogram"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: STOICHIOMETRY & REACTION KINETICS -->
+        <section id="stoichiometry" class="space-y-6">
+            <div class="border-l-4 border-teal-400 pl-4">
+                <h2 class="text-xl font-bold text-white">Idealized Stoichiometry & Carbonate Formation</h2>
+                <p class="text-xs text-slate-400 mt-1">Elemental-balance examples for an alkaline conversion concept—not validated kinetics or plant performance.</p>
+            </div>
+
+            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+                <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                    The equations below are <strong>idealized overall mass balances</strong> that illustrate one possible carbon-to-carbonate bookkeeping pathway. They do not establish the actual reaction mechanism or achieved yield. Carbonate formation is not, by itself, proof of permanent storage or zero life-cycle emissions; the source and recovery of NaOH, process heat and electricity, pretreatment, residual liquids, and eventual carbonate handling all matter.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-5 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-emerald-400">Polyethylene (PE) Model</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">[CH₂]ₙ Feedstock</span>
+                        </div>
+                        <div class="text-xs font-mono bg-slate-900 p-3 rounded-lg border border-slate-800 text-slate-200 overflow-x-auto">
+                            CH₂ + 2 NaOH + H₂O ──> Na₂CO₃ + 3 H₂
+                        </div>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Molar Mass: 14.027 g/mol</li>
+                            <li>Idealized stoichiometric ceiling: <strong>0.4312 kg H₂ / kg PE</strong> (assumes complete conversion)</li>
+                            <li>Illustrative 70% assumption: <strong>0.3018 kg H₂ / kg PE</strong> (not a measured plant yield)</li>
+                            <li>Hydrogen LHV represented: <strong>about 36.2 MJ/kg plastic</strong> at that assumed yield</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-5 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-cyan-400">Polyethylene Terephthalate (PET)</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">C₁₀H₈O₄ Feedstock</span>
+                        </div>
+                        <div class="text-xs font-mono bg-slate-900 p-3 rounded-lg border border-slate-800 text-slate-200 overflow-x-auto">
+                            C₁₀H₈O₄ + 20 NaOH + 6 H₂O ──> 10 Na₂CO₃ + 20 H₂
+                        </div>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Molar Mass: 192.146 g/mol</li>
+                            <li>Idealized stoichiometric ceiling: <strong>0.2098 kg H₂ / kg PET</strong> (assumes complete conversion)</li>
+                            <li>Illustrative 70% assumption: <strong>0.1469 kg H₂ / kg PET</strong> (not a measured plant yield)</li>
+                            <li>Hydrogen LHV represented: <strong>about 17.6 MJ/kg plastic</strong> at that assumed yield</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-amber-500/25 bg-amber-950/20 p-4 text-xs leading-relaxed text-amber-100">
+                    <strong>Important mass-balance limit:</strong> the idealized PE equation consumes 2 mol NaOH per mol CH₂ repeat unit—about 5.7 kg NaOH per kg PE, before any excess reagent or recovery loop. The mass-balance example omits reagent production/recovery, heat demand, pretreatment, separations, and waste streams; it is not a process design or carbon-intensity result.
+                </div>
+
+                <div class="bg-gradient-to-r from-teal-900/40 to-slate-900 border border-teal-500/30 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="space-y-1 text-center md:text-left">
+                        <div class="text-xs font-bold text-teal-300">MSW Mixed Plastic Standard Baseline</div>
+                        <div class="text-xs text-slate-400">Empirical composite calculation for post-consumer waste streams (PE + PP + PET blend).</div>
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-3 text-xs font-bold">
+                        <div class="bg-slate-950 px-3 py-2 rounded-lg border border-slate-800 text-emerald-400">
+                            Yield: 0.22435 kg H₂ / kg Plastic
+                        </div>
+                        <div class="bg-slate-950 px-3 py-2 rounded-lg border border-slate-800 text-cyan-400">
+                            Energy: 26.92 MJ/kg (7.48 kWh/kg)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: SECTORAL FUEL DEMAND & FULFILLMENT MATRIX -->
+        <section id="fulfillment" class="space-y-6">
+            <div class="border-l-4 border-cyan-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Sectoral Fuel Requirement & ATT Project Fulfillment Matrix</h2>
+                <p class="text-xs text-slate-400 mt-1">Detailed evaluation of how Macro 2026 and 2031 hydrogen outputs fulfill specific sector demands.</p>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                The page’s <strong>illustrative scenarios</strong> apply the assumed mixed-plastic yield to 519 Mt and 588 Mt of feedstock, respectively, to estimate hydrogen-energy totals. Sector comparisons show a mathematical “if all output were allocated here” ratio—not a claim that the same output can supply multiple sectors at once, or that hydrogen can directly replace aviation or marine fuels.
+            </p>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-200">Sector Fuel Fulfillment Capacity (%)</h3>
+                        <p class="mt-0.5 text-xs text-slate-400">Alternative allocation scenarios; compare both pools or isolate one year.</p>
+                    </div>
+                    <label class="flex flex-col gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400" for="coverageScenarioSelect">
+                        Scenario view
+                        <select id="coverageScenarioSelect" class="chart-control normal-case tracking-normal" aria-label="Choose which hydrogen scenario years to show">
+                            <option value="both">Compare 2026 &amp; 2031</option>
+                            <option value="2026">2026 only</option>
+                            <option value="2031">2031 only</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="fulfillmentBarChart" role="img" aria-label="Grouped bar chart comparing hypothetical sector coverage under 2026 and 2031 scenarios"></canvas>
+                </div>
+                    <p id="coverageScenarioLive" class="sr-only" aria-live="polite">Comparing 2026 and 2031 scenario pools.</p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h3 class="text-base font-semibold text-slate-200">Master Sector Fuel & Fulfillment Data Table</h3>
+                    <div class="text-xs text-slate-400">Scenario pool allocation ratios; rows are alternative uses, not additive commitments.</div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/60">
+                                <th class="p-3">Economic Sector / Sub-Sector</th>
+                                <th class="p-3 text-right">Demand (Mtoe)</th>
+                                <th class="p-3 text-right">Demand (TWh)</th>
+                                <th class="p-3 text-right">Global TFC Share</th>
+                                <th class="p-3 text-right text-cyan-400">2026 Scenario Pool (Mtoe)</th>
+                                <th class="p-3 text-right text-cyan-400">2026 If Allocated (%)</th>
+                                <th class="p-3 text-right text-emerald-400">2031 Scenario Pool (Mtoe)</th>
+                                <th class="p-3 text-right text-emerald-400">2031 If Allocated (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fulfillmentTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: DOWNSTREAM SECTOR DECARBONIZATION HUB -->
+        <section id="downstream" class="space-y-6">
+            <div class="border-l-4 border-emerald-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Potential Hydrogen Applications & Qualification Needs</h2>
+                <p class="text-xs text-slate-400 mt-1">Target application matrix for hydrogen fuel generated via ATT plastic transformation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Card 1: Power Generation -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-cyan-400">1. POWER GENERATION</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">Grid Decarbonization</span>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Gas Turbine Blending & Grid Balancing</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Hydrogen is co-fired with natural gas in combined-cycle gas turbines (GTCC) to reduce utility carbon intensity. Provides firm intermittent backup power and grid stabilization.
+                        </p>
+                        <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                            <li>GTCC Blending (15–30% H₂ volume)</li>
+                            <li>Peaking power plant fuel displacement</li>
+                            <li>Potential emissions reduction depends on hydrogen production and turbine performance</li>
+                        </ul>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 text-[11px] text-cyan-300 font-mono">
+                        Target Demand: 1,611 Mtoe Natural Gas Fleet
+                    </div>
+                </div>
+
+                <!-- Card 2: Heavy Industry -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-emerald-400">2. HEAVY INDUSTRY</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Green Steel & Cement</span>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Potential H₂-DRI & Low-Carbon Process Heat</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Hydrogen can act as a reducing agent in Direct Reduced Iron (H₂-DRI), while electrification and low-carbon heat can support cement and glass. Actual emissions depend on hydrogen supply, electricity, process design, and remaining carbon sources.
+                        </p>
+                        <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                            <li>Potential lower-emissions H₂-DRI, subject to low-carbon H₂ supply</li>
+                            <li>Cement & Glass high-temperature combustion</li>
+                            <li>Macro 2031 fulfills 117.06% of Iron & Steel demand</li>
+                        </ul>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 text-[11px] text-emerald-300 font-mono">
+                        Steel Sector Fulfillment: 117.06% (323 Mtoe Demand)
+                    </div>
+                </div>
+
+                <!-- Card 3: Refining & Chemicals -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-amber-400">3. REFINING & CHEMICALS</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Petrochem Feedstock</span>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Hydrocracking, Desulfurization & Green Ammonia</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Supplies clean H₂ for refinery hydrotreatment while serving as chemical feedstock for ammonia (NH₃) synthesis with low-carbon hydrogen in nitrogen fertilizer manufacturing and green methanol.
+                        </p>
+                        <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                            <li>Refinery hydrocracking & desulfurization</li>
+                            <li>Green Ammonia (NH₃) for agriculture</li>
+                            <li>Macro 2031 fulfills 175.86% of chemical demand</li>
+                        </ul>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 text-[11px] text-amber-300 font-mono">
+                        Chemical Sector Fulfillment: 175.86% (215 Mtoe Demand)
+                    </div>
+                </div>
+
+                <!-- Card 4: Transportation & Space -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-teal-300">4. TRANSPORT & AEROSPACE</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20">FCEV, Marine & Space</span>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Heavy Freight, Marine Ammonia & ISRO Cryogenic Fuel</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Potential uses include long-haul FCEVs, buses, marine fuels, synthetic aviation fuel, and qualified aerospace fuel. At fuel-cell point of use, water is the main product; end-to-end emissions depend on hydrogen production, purification, compression, and delivery.
+                        </p>
+                        <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                            <li>Heavy Freight FCEV & Marine Bunkering</li>
+                            <li>Aviation Synthetic Aviation Fuels (SAF)</li>
+                            <li>Aerospace use case (requires dedicated fuel-grade supply and qualification)</li>
+                        </ul>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 text-[11px] text-teal-300 font-mono">
+                        Aviation: 112.53% | Marine: 137.49% Fulfillment
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 8: OPERATIONAL SCALE DYNAMICS & CAPEX -->
+        <section id="scales" class="space-y-6">
+            <div class="border-l-4 border-cyan-500 pl-4">
+                <h2 class="text-xl font-bold text-white">Operational Scale Dynamics & Capital Expenditures</h2>
+                <p class="text-xs text-slate-400 mt-1">Modular implementation costs (INR ₹) and annual production capacities from unit scale to global infrastructure.</p>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                The facility tiers below are illustrative sizing and cost estimates from the supplied project material. They are not vendor quotations, feasibility-study results, or verified commercial benchmarks; site-specific engineering, feedstock logistics, permitting, safety systems, utilities, and reagent recovery could materially change them. Hydrogen figures use the scenario yield assumption. The carbonate-equivalent figures apply the idealized PE stoichiometry and complete conversion; they are not measured or saleable product output.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Small Scale -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-cyan-400">Small-Scale Unit</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300">1.0 Tonne / Day</span>
+                        </div>
+                        <div class="text-xl font-black text-white">₹11 Lakh - ₹36 Lakh <span class="text-xs text-slate-400 font-normal">CapEx</span></div>
+                        <ul class="text-xs text-slate-300 space-y-2 border-t border-slate-800 pt-3">
+                            <li class="flex justify-between"><span>Throughput:</span> <strong>365 t/year</strong></li>
+                            <li class="flex justify-between"><span>Modeled H₂ Output:</span> <strong>81.89 t/year</strong></li>
+                            <li class="flex justify-between"><span>H₂ Volume:</span> <strong>0.91M Nm³</strong></li>
+                            <li class="flex justify-between"><span>Energy Output:</span> <strong>2.73 GWh</strong></li>
+                            <li class="flex justify-between"><span>Idealized Na₂CO₃ eq.:</span> <strong>2,763 t/year</strong></li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                        💡 <strong>Reach:</strong> Illustrative vehicle-equivalence; not a deployment forecast or verified supply plan.
+                    </div>
+                </div>
+
+                <!-- Mid Scale -->
+                <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-5 space-y-4 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-cyan-500 text-slate-950 text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase">
+                        Regional Standard
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-emerald-400">Mid-Scale Facility</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300">10.0 Tonnes / Day</span>
+                        </div>
+                        <div class="text-xl font-black text-white">₹57 Lakh - ₹1.16 Cr <span class="text-xs text-slate-400 font-normal">CapEx</span></div>
+                        <ul class="text-xs text-slate-300 space-y-2 border-t border-slate-800 pt-3">
+                            <li class="flex justify-between"><span>Throughput:</span> <strong>3,650 t/year</strong></li>
+                            <li class="flex justify-between"><span>Modeled H₂ Output:</span> <strong>818.88 t/year</strong></li>
+                            <li class="flex justify-between"><span>H₂ Volume:</span> <strong>9.09M Nm³</strong></li>
+                            <li class="flex justify-between"><span>Energy Output:</span> <strong>27.29 GWh</strong></li>
+                            <li class="flex justify-between"><span>Idealized Na₂CO₃ eq.:</span> <strong>27,631 t/year</strong></li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                        💡 <strong>Reach:</strong> Potential depot use case; demand and conversion losses require site-specific analysis.
+                    </div>
+                </div>
+
+                <!-- Large Scale -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-amber-400">Large-Scale Refinery</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">100.0 Tonnes / Day</span>
+                        </div>
+                        <div class="text-xl font-black text-white">₹6.22 Cr - ₹7.15 Cr <span class="text-xs text-slate-400 font-normal">CapEx</span></div>
+                        <ul class="text-xs text-slate-300 space-y-2 border-t border-slate-800 pt-3">
+                            <li class="flex justify-between"><span>Throughput:</span> <strong>36,500 t/year</strong></li>
+                            <li class="flex justify-between"><span>Modeled H₂ Output:</span> <strong>8,188.78 t/year</strong></li>
+                            <li class="flex justify-between"><span>H₂ Volume:</span> <strong>90.89M Nm³</strong></li>
+                            <li class="flex justify-between"><span>Energy Output:</span> <strong>272.96 GWh</strong></li>
+                            <li class="flex justify-between"><span>Idealized Na₂CO₃ eq.:</span> <strong>276,315 t/year</strong></li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                        💡 <strong>Reach:</strong> Potential industrial use case; actual volume depends on process demand, purity, and delivery constraints.
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-base font-semibold text-slate-200 mb-4">Facility Scale Energy Output Comparison (GWh / year)</h3>
+                <div class="chart-container">
+                    <canvas id="plantScaleChart" role="img" aria-label="Bar chart of illustrative annual hydrogen energy output by plant scale, in gigawatt-hours"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 9: CARBON MINERALIZATION & PHASED ROADMAP -->
+        <section id="roadmap" class="space-y-6">
+            <div class="border-l-4 border-teal-400 pl-4">
+                <h2 class="text-xl font-bold text-white">Carbonate Formation Assumptions & Proposed Roadmap</h2>
+                <p class="text-xs text-slate-400 mt-1">Carbonate product assumptions, system boundaries, and a proposed deployment roadmap.</p>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                The idealized PE equation implies a theoretical sodium-carbonate mass of about 7.57 kg per kg PE, but this is a stoichiometric calculation—not demonstrated saleable product output. Actual carbon may also remain in liquids, residual solids, or gases; carbonate purity, reagent recovery, end use, and permanence require validation. No CNT co-product or marketable-grade soda ash output is assumed in the cited bench study.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 relative">
+                    <div class="text-xs font-bold text-cyan-400">PHASE 1 (YEARS 1–3)</div>
+                    <h3 class="text-base font-bold text-white">Decentralized Municipal Deployment</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Deploy Small-Scale (1 t/d) and Mid-Scale (10 t/d) processing units directly at municipal sorting facilities and recovery centers. Minimizes feedstock transport while fueling municipal bus fleets.
+                    </p>
+                    <div class="text-[11px] text-slate-500 font-mono pt-2 border-t border-slate-800">
+                        CapEx: ₹11L to ₹1.16 Cr / Unit
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 relative">
+                    <div class="text-xs font-bold text-emerald-400">PHASE 2 (YEARS 4–7)</div>
+                    <h3 class="text-base font-bold text-white">Industrial Cluster Co-Location</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Scale deployment to Large-Scale facilities (100 t/d) situated within industrial complexes, maritime ports, and chemical hubs. Direct H₂ injection into hydrotreating units and furnaces.
+                    </p>
+                    <div class="text-[11px] text-slate-500 font-mono pt-2 border-t border-slate-800">
+                        CapEx: ₹6.22 Cr to ₹7.15 Cr / Unit
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3 relative">
+                    <div class="text-xs font-bold text-amber-400">PHASE 3 (YEARS 8–10+)</div>
+                    <h3 class="text-base font-bold text-white">Macro Regional Energy Integration</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Construct integrated multi-unit complexes (&gt;1,000 t/d combined capacity). Connect directly to national hydrogen pipeline grids, H₂-DRI steelworks, and marine bunkering terminals.
+                    </p>
+                    <div class="text-[11px] text-slate-500 font-mono pt-2 border-t border-slate-800">
+                        CapEx: Institutional Infrastructure Capital
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUPPLEMENTAL SECTION: BY-PRODUCT OPTIONS -->
+        <section id="byproducts" class="space-y-6">
+            <div class="border-l-4 border-emerald-400 pl-4">
+                <h2 class="text-xl font-bold text-white">Potential By-product Routes: Carbonate, Bicarbonate &amp; CNTs</h2>
+                <p class="mt-1 text-xs text-slate-400">Possible downstream uses are separated from products actually demonstrated in bench-scale ATT.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <article class="rounded-xl border border-emerald-500/30 bg-slate-900 p-4">
+                    <h3 class="font-bold text-emerald-300">Sodium carbonate (soda ash)</h3>
+                    <p class="mt-2 text-slate-300">The supplied material lists potential uses in glass, detergents, paper, water treatment, and other industries. The idealized PE equation gives a theoretical ceiling of about 7.57 kg Na₂CO₃ per kg PE—not measured saleable output.</p>
+                </article>
+                <article class="rounded-xl border border-amber-500/30 bg-slate-900 p-4">
+                    <h3 class="font-bold text-amber-300">Sodium bicarbonate (downstream upgrade)</h3>
+                    <p class="mt-2 text-slate-300">Not a direct ATT product. A separate carbonation step can convert soda ash using additional CO₂ and water: <span class="font-mono">Na₂CO₃ + CO₂ + H₂O → 2 NaHCO₃</span>. The CO₂ source, energy, and life-cycle balance must be assessed.</p>
+                </article>
+                <article class="rounded-xl border border-cyan-500/30 bg-slate-900 p-4">
+                    <h3 class="font-bold text-cyan-300">Carbon nanotubes (CNTs)</h3>
+                    <p class="mt-2 text-slate-300">The supplemental file proposes CNT recovery as a high-value option for batteries, composites, coatings, sensors, and membranes. This is an alternate carbon pathway—not a co-product established by the cited ATT study—and requires separate process evidence.</p>
+                </article>
+            </div>
+
+            <aside class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-xs leading-relaxed text-amber-100">
+                <strong class="text-amber-200">Carbon and market reality check:</strong> the supplemental file’s 4.45-billion-tonne/year soda-ash scenario is theoretical arithmetic based on applying the all-carbon-to-carbonate PE balance at macro scale. It is not an ATT production result or a market forecast. The cited bench study reported carbon distributed across inorganic, liquid, and gaseous/residual fractions (roughly 32–44%, 44–62%, and under 13%, respectively), so the assumption that all plastic carbon becomes saleable soda ash is not supported. CNT recovery would also compete for carbon that otherwise might form carbonate. Do not treat any by-product revenue or permanent storage as established without process, purity, market, and life-cycle evidence.
+            </aside>
+            <p class="text-[10px] leading-relaxed text-slate-500">Source: user-provided <em>ATT Impact, Wildlife and By-product Sections</em> HTML; application examples and macro scenario are reproduced as proposals. Carbon-distribution context: Park et al., <em>PNAS</em> (2026), <a class="text-cyan-300 underline" href="https://doi.org/10.1073/pnas.2537552123" target="_blank" rel="noopener noreferrer">doi:10.1073/pnas.2537552123</a>.</p>
+        </section>
+
+        <!-- RESEARCH RESOURCES -->
+        <section id="research-links" class="space-y-5">
+            <div class="border-l-4 border-cyan-400 pl-4">
+                <h2 class="text-xl font-bold text-white">Research Resources</h2>
+                <p class="mt-1 text-xs text-slate-400">Useful starting points for literature, market, sustainability, and global-data research.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <a href="https://mcgroup.co.uk/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">MC Group</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Market research and industry reports.</p>
+                </a>
+                <a href="https://link.springer.com/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">SpringerLink</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Academic journals, books, and research chapters.</p>
+                </a>
+                <a href="https://www.researchgate.net/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">ResearchGate</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Researcher profiles and shared publications.</p>
+                </a>
+                <a href="https://www.sciencedirect.com/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">ScienceDirect</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Scientific journals and book chapters.</p>
+                </a>
+                <a href="https://healtheplanet.com/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">Heal the Planet</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Environmental and sustainability information.</p>
+                </a>
+                <a href="https://ourworldindata.org/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">Our World in Data</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Data and research on global issues, including energy and the environment.</p>
+                </a>
+                <a href="https://earth.org/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">Earth.org</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Environmental reporting and explainers.</p>
+                </a>
+                <a href="https://www.business-standard.com/health/toxic-plastics-heart-disease-deaths-india-study-the-lancet-2025-125050600391_1.html" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">Business Standard — study coverage</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">News coverage of a plastics and heart-disease study; verify details against the original paper.</p>
+                </a>
+                <a href="https://www.petaindia.com/blog/go-plastic-free/" target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-cyan-500/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <h3 class="text-sm font-semibold text-cyan-200">PETA India — Go Plastic-Free</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">Advocacy resource with plastic-free suggestions; not peer-reviewed evidence.</p>
+                </a>
+            </div>
+            <p class="text-[11px] leading-relaxed text-slate-500">These links include research platforms, data portals, journalism, and advocacy resources—not citations for every claim. Cite individual papers, datasets, or reports, and verify their methods, date, and scope.</p>
+        </section>
+
+        <!-- SECTION 10: PROJECT TEAM -->
+        <section id="team" class="space-y-6">
+            <div class="border-l-4 border-emerald-400 pl-4">
+                <h2 class="text-xl font-bold text-white">Project Team</h2>
+                <p class="text-xs text-slate-400 mt-1">Mentorship, leadership, presentation, and research behind this energy-demand analysis.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                <article class="group rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-lg shadow-cyan-950/20 transition hover:-translate-y-1 hover:border-cyan-400/60">
+                    <div class="flex items-center justify-between">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-400/10 text-lg font-black text-cyan-300">VA</div>
+                        <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300">Mentor</span>
+                    </div>
+                    <h3 class="mt-6 text-xl font-extrabold leading-tight text-white group-hover:text-cyan-200">Dr. Vaishali Agme</h3>
+                    <div class="mt-4 h-1 w-12 rounded-full bg-cyan-400"></div>
+                </article>
+                <a href="https://github.com/AdityaChavan-07" target="_blank" rel="noopener noreferrer" aria-label="Open Aditya Chavan's GitHub profile in a new tab" class="group block no-underline rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-lg shadow-emerald-950/20 transition hover:-translate-y-1 hover:border-emerald-400/60 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+                    <div class="flex items-center justify-between">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 text-lg font-black text-emerald-300">AC</div>
+                        <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">Team Leader</span>
+                    </div>
+                    <h3 class="mt-6 text-xl font-extrabold leading-tight text-white group-hover:text-emerald-200">Aditya Chavan</h3>
+                    <p class="mt-2 text-xs font-medium text-slate-400">Presenter</p>
+                    <p class="mt-2 text-xs font-semibold text-emerald-300">@AdityaChavan-07 · GitHub <span aria-hidden="true">↗</span></p>
+                    <div class="mt-4 h-1 w-12 rounded-full bg-emerald-400"></div>
+                </a>
+                <article class="group rounded-2xl border border-teal-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-lg shadow-teal-950/20 transition hover:-translate-y-1 hover:border-teal-400/60">
+                    <div class="flex items-center justify-between">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-400/10 text-lg font-black text-teal-300">AK</div>
+                        <span class="rounded-full border border-teal-400/20 bg-teal-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-300">Presenter</span>
+                    </div>
+                    <h3 class="mt-6 text-xl font-extrabold leading-tight text-white group-hover:text-teal-200">Anamika Kumar</h3>
+                    <div class="mt-4 h-1 w-12 rounded-full bg-teal-400"></div>
+                </article>
+                <a href="https://github.com/Samarth-tech09" target="_blank" rel="noopener noreferrer" aria-label="Open Samarth Kare's GitHub profile in a new tab" class="group block no-underline rounded-2xl border border-amber-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-lg shadow-amber-950/20 transition hover:-translate-y-1 hover:border-amber-400/60 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+                    <div class="flex items-center justify-between">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-lg font-black text-amber-300">SK</div>
+                        <span class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300">Research</span>
+                    </div>
+                    <h3 class="mt-6 text-xl font-extrabold leading-tight text-white group-hover:text-amber-200">Samarth Kare</h3>
+                    <p class="mt-2 text-xs font-medium text-slate-400">Research Member</p>
+                    <p class="mt-2 text-xs font-semibold text-amber-300">@Samarth-tech09 · GitHub <span aria-hidden="true">↗</span></p>
+                    <div class="mt-4 h-1 w-12 rounded-full bg-amber-400"></div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Flask-backed research-paper library -->
+        <section id="documents" class="space-y-6">
+            <div class="border-l-4 border-violet-400 pl-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Project Documents</h2>
+                    <p class="text-xs text-slate-400 mt-1">Browse research papers. Administrator uploads are stored by the project server.</p>
+                </div>
+                <span class="w-fit rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-300">Public read · Admin upload</span>
+            </div>
+
+            <div id="docAdminLogin" class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+                <form id="docAdminLoginForm" class="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div class="flex-1">
+                        <label for="docAdminPasscode" class="block text-xs font-medium text-slate-300 mb-1.5">Administrator password</label>
+                        <input id="docAdminPasscode" type="password" autocomplete="current-password" required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-violet-400 focus:outline-none" placeholder="Enter administrator password">
+                    </div>
+                    <button id="docLoginButton" type="submit" class="rounded-lg bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400">Sign in</button>
+                </form>
+                <p id="docLoginStatus" role="status" aria-live="polite" class="mt-2 text-xs text-slate-400">Checking administrator session…</p>
+            </div>
+
+            <div id="docAdminPanel" class="hidden rounded-2xl border border-violet-500/30 bg-violet-950/20 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-sm font-semibold text-violet-200">Administrator tools</h3>
+                        <p class="text-[11px] text-slate-400 mt-1">Upload a PDF paper to the server library.</p>
+                    </div>
+                    <button id="docAdminLogout" type="button" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800">Sign out</button>
+                </div>
+                <form id="docUploadForm" class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="docTitle" class="block text-xs font-medium text-slate-300 mb-1.5">Paper title (required)</label>
+                            <input id="docTitle" name="title" type="text" maxlength="160" required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-violet-400 focus:outline-none" placeholder="e.g., Project Research Paper">
+                        </div>
+                        <div>
+                            <label for="docFile" class="block text-xs font-medium text-slate-300 mb-1.5">Choose a PDF (up to 8 MB)</label>
+                            <input id="docFile" name="file" type="file" accept=".pdf,application/pdf" required class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="docDescription" class="block text-xs font-medium text-slate-300 mb-1.5">Description (optional, max 500 characters)</label>
+                        <textarea id="docDescription" name="description" rows="2" maxlength="500" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-violet-400 focus:outline-none" placeholder="What is this research paper about?"></textarea>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="docUploadButton" type="submit" class="rounded-lg bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400">Upload paper</button>
+                        <span id="docStatus" role="status" aria-live="polite" class="text-xs text-slate-400"></span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <h3 class="text-sm font-semibold text-slate-200">Research papers</h3>
+                    <span id="docCount" class="text-[11px] text-slate-500">0 papers</span>
+                </div>
+                <p id="docLibraryStatus" role="status" aria-live="polite" class="mb-3 text-xs text-slate-400">Loading papers…</p>
+                <div id="docList" class="grid grid-cols-1 md:grid-cols-2 gap-3" aria-live="polite"></div>
+                <p id="docEmptyState" class="hidden rounded-xl border border-dashed border-slate-700 p-5 text-center text-xs text-slate-500">No research papers are available yet.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 space-y-1">
+            <div>Alkaline Thermal Treatment (ATT) Sustainable Energy Analysis & Sectoral Fulfillment Infographic</div>
+            <div class="text-[11px] text-slate-600">Research & Presentation Team: Aditya Chavan, Anamika Kumar, Samarth Kare</div>
+            <div class="text-[11px] font-semibold text-cyan-400">Website design by Aditya Chavan</div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Charts & Table Population -->
+    <script>
+        const stageInfo = {
+            1: { title: "1. FEED PREPARATION", desc: "Project proposal: hopper-fed, high-torque shredding with a sizing screen for more uniform flakes. The cited laboratory study used prepared samples; commercial feed handling is not established.", eff: "Not reported", press: "Not specified" },
+            2: { title: "2. PRETREATMENT / FEED CONDITIONING", desc: "The speech proposes hot/friction washing, float-sink density separation, and dewatering. The cited bench study used thermal oxidation pretreatment for PE and PP; a combined industrial feed-preparation line is not validated.", eff: "Not reported", press: "Not specified" },
+            3: { title: "3. ALKALINE THERMAL TREATMENT", desc: "The speech proposes 600–700°C treatment of plastic with NaOH and water; this is not a validated operating specification. The project presents ATT alongside a conventional thermal-conversion/gasification route, but their integration is conceptual. Bench-scale ATT tested PET, PE, and PP, with PE/PP pretreatment; yields depend on conditions.", eff: "Project model: 70% assumption", press: "Not a plant design" },
+            4: { title: "4. PRODUCT / RESIDUE SEPARATION", desc: "Conceptual downstream separation. The published study reports hydrogen and carbon-containing liquid, solid, and gaseous products; this page does not specify a validated recovery train.", eff: "Not reported", press: "Not specified" },
+            5: { title: "5. HYDROGEN PURIFICATION", desc: "The cited bench study reported hydrogen purity above 90%. A 99.99% product specification or a particular PSA/membrane train is not established by this infographic.", eff: ">90% reported in study", press: "Not specified" },
+            6: { title: "6. STORAGE / DELIVERY", desc: "Compression, storage, and transport are conceptual downstream steps. Pressure and equipment must be determined by a site-specific engineering and safety design.", eff: "Not reported", press: "Not specified" }
+        };
+
+        function selectStage(num) {
+            const info = stageInfo[num];
+            if (!info) return;
+            document.getElementById('stage-detail-title').innerText = "SELECTED STAGE: " + info.title;
+            document.getElementById('stage-detail-desc').innerText = info.desc;
+            document.getElementById('stage-detail-eff').innerText = info.eff;
+            document.getElementById('stage-detail-press').innerText = info.press;
+
+            for (let i = 1; i <= 6; i++) {
+                const card = document.getElementById('stage-card-' + i);
+                if (card) {
+                    const selected = i === num;
+                    card.classList.toggle('ring-2', selected);
+                    card.classList.toggle('ring-cyan-400', selected);
+                    card.classList.toggle('bg-sky-900/80', selected);
+                    card.setAttribute('aria-pressed', String(selected));
+                }
+            }
+        }
+
+        const tableData = [
+            { sector: ['ROAD TRANSPORTATION', 'TOTAL'], demandMtoe: 1997.00, demandTwh: 23225.11, tfcShare: '20.09%', m26Yield: 333.73, m26Ful: '16.71%', m31Yield: 378.10, m31Ful: '18.93%' },
+            { sector: ['-- Heavy-Duty', 'Freight Trucks'], demandMtoe: 998.50, demandTwh: 11612.56, tfcShare: '10.05%', m26Yield: 333.73, m26Ful: '33.42%', m31Yield: 378.10, m31Ful: '37.87%' },
+            { sector: ['-- Passenger Cars &', 'Light Commercial'], demandMtoe: 998.50, demandTwh: 11612.56, tfcShare: '10.05%', m26Yield: 333.73, m26Ful: '33.42%', m31Yield: 378.10, m31Ful: '37.87%' },
+            { sector: ['AVIATION', 'TOTAL'], demandMtoe: 336.00, demandTwh: 3907.68, tfcShare: '3.38%', m26Yield: 333.73, m26Ful: '99.32%', m31Yield: 378.10, m31Ful: '112.53%' },
+            { sector: ['MARINE', 'NAVIGATION'], demandMtoe: 275.00, demandTwh: 3198.25, tfcShare: '2.77%', m26Yield: 333.73, m26Ful: '121.36%', m31Yield: 378.10, m31Ful: '137.49%' },
+            { sector: ['RAIL', 'TRANSPORTATION'], demandMtoe: 32.00, demandTwh: 372.16, tfcShare: '0.32%', m26Yield: 333.73, m26Ful: '1042.90%', m31Yield: 378.10, m31Ful: '1181.57%' },
+            { sector: ['TOTAL TRANSPORT', 'SECTOR'], demandMtoe: 2640.00, demandTwh: 30703.20, tfcShare: '26.56%', m26Yield: 333.73, m26Ful: '12.64%', m31Yield: 378.10, m31Ful: '14.32%' },
+            { sector: ['INDUSTRIAL SECTOR', 'TOTAL'], demandMtoe: 2418.00, demandTwh: 28121.34, tfcShare: '24.33%', m26Yield: 333.73, m26Ful: '13.80%', m31Yield: 378.10, m31Ful: '15.64%' },
+            { sector: ['-- Iron & Steel', 'Manufacturing'], demandMtoe: 323.00, demandTwh: 3756.49, tfcShare: '3.25%', m26Yield: 333.73, m26Ful: '103.32%', m31Yield: 378.10, m31Ful: '117.06%' },
+            { sector: ['-- Chemical &', 'Petrochemical'], demandMtoe: 215.00, demandTwh: 2500.45, tfcShare: '2.16%', m26Yield: 333.73, m26Ful: '155.22%', m31Yield: 378.10, m31Ful: '175.86%' },
+            { sector: ['-- Non-Metallic', 'Minerals (Cement)'], demandMtoe: 211.00, demandTwh: 2453.93, tfcShare: '2.12%', m26Yield: 333.73, m26Ful: '158.16%', m31Yield: 378.10, m31Ful: '179.20%' },
+            { sector: ['-- Other Mfg', 'Industries'], demandMtoe: 1669.00, demandTwh: 19410.47, tfcShare: '16.79%', m26Yield: 333.73, m26Ful: '20.00%', m31Yield: 378.10, m31Ful: '22.65%' },
+            { sector: ['RESIDENTIAL', 'BUILDINGS'], demandMtoe: 2050.00, demandTwh: 23841.50, tfcShare: '20.63%', m26Yield: 333.73, m26Ful: '16.28%', m31Yield: 378.10, m31Ful: '18.44%' },
+            { sector: ['COMMERCIAL &', 'PUBLIC SERVICES'], demandMtoe: 800.00, demandTwh: 9304.00, tfcShare: '8.05%', m26Yield: 333.73, m26Ful: '41.72%', m31Yield: 378.10, m31Ful: '47.26%' },
+            { sector: ['NON-ENERGY', 'PETROCHEMICAL USE'], demandMtoe: 921.00, demandTwh: 10711.23, tfcShare: '9.27%', m26Yield: 333.73, m26Ful: '36.24%', m31Yield: 378.10, m31Ful: '41.05%' },
+            { sector: ['AGRICULTURE,', 'FISHING & OTHER'], demandMtoe: 1109.00, demandTwh: 12897.67, tfcShare: '11.16%', m26Yield: 333.73, m26Ful: '30.09%', m31Yield: 378.10, m31Ful: '34.09%' },
+            { sector: ['TOTAL FINAL', 'CONSUMPTION (TFC)'], demandMtoe: 9938.00, demandTwh: 115578.94, tfcShare: '100.00%', m26Yield: 333.73, m26Ful: '3.36%', m31Yield: 378.10, m31Ful: '3.80%' }
+        ];
+
+        function populateTable() {
+            const tbody = document.getElementById('fulfillmentTableBody');
+            tbody.innerHTML = '';
+            tableData.forEach(row => {
+                const labelStr = Array.isArray(row.sector) ? row.sector.join(' ') : row.sector;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-200">${labelStr}</td>
+                    <td class="p-3 text-right font-mono">${row.demandMtoe.toLocaleString()}</td>
+                    <td class="p-3 text-right font-mono text-slate-400">${row.demandTwh.toLocaleString()}</td>
+                    <td class="p-3 text-right font-mono text-slate-400">${row.tfcShare}</td>
+                    <td class="p-3 text-right font-mono text-cyan-400">${row.m26Yield.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono text-cyan-400 font-bold">${row.m26Ful}</td>
+                    <td class="p-3 text-right font-mono text-emerald-400">${row.m31Yield.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono text-emerald-400 font-bold">${row.m31Ful}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let energyCarrierChart = null;
+        let plasticYieldChart = null;
+        let fulfillmentBarChart = null;
+        let energyDisplayUnit = 'Mtoe';
+        const energyCarrierBaseMtoe = [4051, 1919, 1611, 1014, 994, 349];
+        const resinYieldPercent = [14.69, 30.18, 13.50, 29.80, 29.50, 22.00, 20.50];
+        const energyCarrierColors = ['#2f9c6a', '#48bf8b', '#36aa9d', '#d8ad56', '#71877b', '#73aeb0'];
+
+        function initCharts() {
+            if (typeof Chart === 'undefined') {
+                document.querySelectorAll('.chart-container').forEach((container) => {
+                    const note = document.createElement('p');
+                    note.className = 'rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 text-xs text-amber-100';
+                    note.textContent = 'Charts could not load. Check your internet connection or allow the Chart.js CDN.';
+                    container.appendChild(note);
+                });
+                return;
+            }
+            Chart.defaults.color = '#b3c4b8';
+            Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            Chart.defaults.plugins.tooltip.backgroundColor = '#0b1d16';
+            Chart.defaults.plugins.tooltip.titleColor = '#eef6f0';
+            Chart.defaults.plugins.tooltip.bodyColor = '#c2d3c7';
+            Chart.defaults.plugins.tooltip.borderColor = '#38654d';
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
+            Chart.defaults.plugins.tooltip.padding = 11;
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+            Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
+            Chart.defaults.plugins.legend.labels.boxWidth = 8;
+            Chart.defaults.plugins.legend.labels.padding = 14;
+
+            const chartTooltipConfig = {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        if (Array.isArray(label)) {
+                            return label.join(' ');
+                        } else {
+                            return label;
+                        }
+                    }
+                }
+            };
+
+            // Helper function to safely retrieve 2D context
+            const getCanvasCtx = (id) => {
+                const canvas = document.getElementById(id);
+                return canvas ? canvas.getContext('2d') : null;
+            };
+
+            // Chart 1: Carrier Breakdown (unit-switchable; custom legend supports keyboard toggling)
+            const carrierCtx = getCanvasCtx('energyCarrierChart');
+            if (carrierCtx) {
+                energyCarrierChart = new Chart(carrierCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            'Refined liquid petroleum',
+                            'Electricity supply',
+                            'Natural gas',
+                            'Biofuels & solid waste',
+                            'Direct end-use coal',
+                            'Other energy forms'
+                        ],
+                        datasets: [{
+                            data: energyCarrierBaseMtoe.slice(),
+                            backgroundColor: energyCarrierColors,
+                            borderWidth: 2,
+                            borderColor: '#0b1d16',
+                            hoverOffset: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '64%',
+                        interaction: { intersect: true, mode: 'nearest' },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => items[0]?.label || '',
+                                    label: (context) => {
+                                        const value = Number(context.parsed) || 0;
+                                        const visibleTotal = context.dataset.data.reduce((sum, amount, index) =>
+                                            context.chart.getDataVisibility(index) ? sum + Number(amount) : sum, 0);
+                                        const share = visibleTotal ? (value / visibleTotal * 100) : 0;
+                                        return ` ${value.toLocaleString('en-US', { maximumFractionDigits: energyDisplayUnit === 'EJ' ? 2 : 1 })} ${energyDisplayUnit} · ${share.toFixed(1)}% of visible total`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 2: Assumed resin hydrogen yields (display can switch between % and kg per tonne)
+            const plasticCtx = getCanvasCtx('plasticTypeChart');
+            if (plasticCtx) {
+                plasticYieldChart = new Chart(plasticCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            ['Code 1: PET', '(Terephthalate)'],
+                            ['Code 2: HDPE', '(High Density)'],
+                            ['Code 3: PVC', '(Vinyl Poly)'],
+                            ['Code 4: LDPE', '(Low Density)'],
+                            ['Code 5: PP', '(Polypropylene)'],
+                            ['Code 6: PS', '(Polystyrene)'],
+                            ['Code 7: OTHER', '(Multilayer)']
+                        ],
+                        datasets: [{
+                            label: 'Assumed H₂ mass yield (%)',
+                            data: resinYieldPercent.slice(),
+                            backgroundColor: '#40c98a',
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9fb4a6', font: { size: 10 } }, grid: { display: false } },
+                            y: { beginAtZero: true, max: 35, ticks: { color: '#9fb4a6', callback: (value) => value + '%' }, grid: { color: '#244536' } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => {
+                                        const label = items[0]?.label;
+                                        return Array.isArray(label) ? label.join(' ') : (label || '');
+                                    },
+                                    label: (context) => ` ${Number(context.parsed.y).toFixed(2)} ${document.getElementById('yieldUnitSelect')?.value === 'kg-per-tonne' ? 'kg H₂ / tonne plastic' : '% mass yield'}`
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 3: Calorific Benchmark
+            const calorificCtx = getCanvasCtx('calorificChart');
+            if (calorificCtx) {
+                new Chart(calorificCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            ['Hydrogen Gas', '(ATT Output)'],
+                            ['Methane /', 'Natural Gas'],
+                            ['LPG Fuel', '(Bottled Gas)'],
+                            ['Petrol /', 'Gasoline'],
+                            ['Diesel Fuel', '(Heavy Motor)'],
+                            ['PP/PE Waste', '(Clean Plastic)'],
+                            ['Mixed Plastic', '(MSW Stream)'],
+                            ['PET Waste', '(Bottle Resin)'],
+                            ['Bituminous', 'Coal Fuel'],
+                            ['Dry Biomass', '/ Wood']
+                        ],
+                        datasets: [{
+                            label: 'Calorific Value / LHV (MJ / kg)',
+                            data: [120.0, 50.0, 46.0, 44.0, 42.5, 44.5, 35.0, 22.5, 26.0, 16.0],
+                            backgroundColor: [
+                                '#40c98a', '#4f9e87', '#5b9f9a', '#7ca99a', '#9cb9a5',
+                                '#c2a761', '#9d9a70', '#8ea397', '#d8ad56', '#72877a'
+                            ],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9fb4a6' }, grid: { color: '#244536' } },
+                            y: { ticks: { color: '#9fb4a6', font: { size: 10 } }, grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: chartTooltipConfig
+                        }
+                    }
+                });
+            }
+
+            // Chart 4: Hypothetical one-sector-at-a-time allocation ratios
+            const fulfillmentCtx = getCanvasCtx('fulfillmentBarChart');
+            if (fulfillmentCtx) {
+                fulfillmentBarChart = new Chart(fulfillmentCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            ['Heavy-Duty', 'Freight Trucks'],
+                            ['Aviation Fuel', 'Total Sector'],
+                            ['Marine', 'Navigation'],
+                            ['Iron & Steel', 'Manufacturing'],
+                            ['Chemical &', 'Petrochem'],
+                            ['Commercial &', 'Public Services'],
+                            ['Total Road', 'Transport']
+                        ],
+                        datasets: [
+                            {
+                                label: '2026 scenario',
+                                data: [33.42, 99.32, 121.36, 103.32, 155.22, 41.72, 16.71],
+                                backgroundColor: '#8fae9d',
+                                borderRadius: 5,
+                                borderSkipped: false
+                            },
+                            {
+                                label: '2031 scenario',
+                                data: [37.87, 112.53, 137.49, 117.06, 175.86, 47.26, 18.93],
+                                backgroundColor: '#40c98a',
+                                borderRadius: 5,
+                                borderSkipped: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9fb4a6', font: { size: 10 } }, grid: { display: false } },
+                            y: { beginAtZero: true, ticks: { color: '#9fb4a6', callback: (value) => value + '%' }, grid: { color: '#244536' } }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: '#c2d3c7', boxWidth: 8, padding: 12 } },
+                            tooltip: chartTooltipConfig
+                        }
+                    }
+                });
+            }
+
+            // Chart 5: Plant Scale GWh Output
+            const plantCtx = getCanvasCtx('plantScaleChart');
+            if (plantCtx) {
+                new Chart(plantCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            ['Small Scale', '(1.0 Tonne/Day)'],
+                            ['Mid Scale', '(10.0 Tonne/Day)'],
+                            ['Large Scale', '(100 Tonne/Day)']
+                        ],
+                        datasets: [{
+                            label: 'Annual Energy Output (GWh)',
+                            data: [2.73, 27.29, 272.96],
+                            backgroundColor: ['#73aeb0', '#40c98a', '#d8ad56'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9fb4a6' }, grid: { display: false } },
+                            y: { ticks: { color: '#9fb4a6' }, grid: { color: '#244536' } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: chartTooltipConfig
+                        }
+                    }
+                });
+            }
+        }
+
+        function wireInteractiveChartControls() {
+            const energySelect = document.getElementById('energyUnitSelect');
+            const energyTotal = document.getElementById('energyChartTotal');
+            const energyLive = document.getElementById('energyChartLive');
+            const energyCanvas = document.getElementById('energyCarrierChart');
+            const energyCaption = document.getElementById('energyChartCaption');
+            const unitMeta = {
+                mtoe: { label: 'Mtoe', factor: 1, decimals: 0 },
+                twh: { label: 'TWh', factor: 11.63, decimals: 1 },
+                ej: { label: 'EJ', factor: 11.63 * 0.0036, decimals: 2 }
+            };
+            const formatEnergy = (value, decimals) => Number(value).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: decimals
+            });
+            const refreshEnergyTotal = () => {
+                if (!energyCarrierChart || !energyTotal) return;
+                const values = energyCarrierChart.data.datasets[0].data;
+                const total = values.reduce((sum, value, index) => energyCarrierChart.getDataVisibility(index) ? sum + Number(value) : sum, 0);
+                const visibleCount = values.reduce((sum, _value, index) => sum + (energyCarrierChart.getDataVisibility(index) ? 1 : 0), 0);
+                const unit = unitMeta[energySelect?.value || 'mtoe'];
+                energyTotal.textContent = `${formatEnergy(total, unit.decimals)} ${unit.label}`;
+                if (energyLive) energyLive.textContent = `Showing ${visibleCount} of 6 energy carriers; visible total ${formatEnergy(total, unit.decimals)} ${unit.label}.`;
+            };
+            if (energySelect && energyCarrierChart) {
+                const updateEnergyUnit = () => {
+                    const unit = unitMeta[energySelect.value] || unitMeta.mtoe;
+                    energyDisplayUnit = unit.label;
+                    energyCarrierChart.data.datasets[0].data = energyCarrierBaseMtoe.map(value => value * unit.factor);
+                    energyCarrierChart.update();
+                    if (energyCaption) energyCaption.textContent = `TFC carrier mix shown in ${unit.label}; switch units or activate legend items to focus the chart.`;
+                    energyCanvas?.setAttribute('aria-label', `Doughnut chart of global total final energy consumption by carrier, in ${unit.label}; values are converted from Mtoe.`);
+                    refreshEnergyTotal();
+                };
+                energySelect.addEventListener('change', updateEnergyUnit);
+                document.querySelectorAll('[data-energy-index]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const index = Number(button.dataset.energyIndex);
+                        energyCarrierChart.toggleDataVisibility(index);
+                        const visible = energyCarrierChart.getDataVisibility(index);
+                        button.setAttribute('aria-pressed', String(visible));
+                        energyCarrierChart.update();
+                        refreshEnergyTotal();
+                    });
+                });
+                updateEnergyUnit();
+            } else if (energySelect) {
+                energySelect.disabled = true;
+            }
+
+            const yieldSelect = document.getElementById('yieldUnitSelect');
+            const yieldCanvas = document.getElementById('plasticTypeChart');
+            const yieldCaption = document.getElementById('yieldChartCaption');
+            const yieldLive = document.getElementById('yieldChartLive');
+            if (yieldSelect && plasticYieldChart) {
+                const updateYieldUnit = () => {
+                    const perTonne = yieldSelect.value === 'kg-per-tonne';
+                    const factor = perTonne ? 10 : 1;
+                    const unit = perTonne ? 'kg H₂ / tonne plastic' : '% mass yield';
+                    plasticYieldChart.data.datasets[0].data = resinYieldPercent.map(value => value * factor);
+                    plasticYieldChart.data.datasets[0].label = perTonne ? 'Assumed H₂ output (kg per tonne plastic)' : 'Assumed H₂ mass yield (%)';
+                    plasticYieldChart.options.scales.y.max = perTonne ? 350 : 35;
+                    plasticYieldChart.options.scales.y.ticks.callback = (value) => perTonne ? `${value} kg/t` : `${value}%`;
+                    plasticYieldChart.update();
+                    if (yieldCaption) yieldCaption.textContent = perTonne
+                        ? 'Derived from the same project assumptions: each 1% mass yield equals 10 kg H₂ per tonne of plastic.'
+                        : 'Project assumptions only; kg H₂ per tonne feedstock equals mass-yield percent × 10.';
+                    yieldCanvas?.setAttribute('aria-label', `Bar chart of assumed hydrogen yield by plastic resin code, in ${unit}. Values are project assumptions.`);
+                    if (yieldLive) yieldLive.textContent = `Showing assumed hydrogen yield in ${unit}. These resin yields are project assumptions, not measured results for every resin.`;
+                };
+                yieldSelect.addEventListener('change', updateYieldUnit);
+                updateYieldUnit();
+            } else if (yieldSelect) {
+                yieldSelect.disabled = true;
+            }
+
+            const scenarioSelect = document.getElementById('coverageScenarioSelect');
+            const scenarioCanvas = document.getElementById('fulfillmentBarChart');
+            const scenarioLive = document.getElementById('coverageScenarioLive');
+            if (scenarioSelect && fulfillmentBarChart) {
+                const updateScenario = () => {
+                    const choice = scenarioSelect.value;
+                    const show2026 = choice !== '2031';
+                    const show2031 = choice !== '2026';
+                    fulfillmentBarChart.setDatasetVisibility(0, show2026);
+                    fulfillmentBarChart.setDatasetVisibility(1, show2031);
+                    fulfillmentBarChart.update();
+                    const message = choice === 'both' ? 'Comparing 2026 and 2031 scenario pools.' : `Showing the ${choice} scenario pool only.`;
+                    if (scenarioLive) scenarioLive.textContent = message;
+                    scenarioCanvas?.setAttribute('aria-label', `Bar chart of hypothetical sector demand coverage; ${message} All sector percentages are alternative allocations, not simultaneous.`);
+                };
+                scenarioSelect.addEventListener('change', updateScenario);
+                updateScenario();
+            } else if (scenarioSelect) {
+                scenarioSelect.disabled = true;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populateTable();
+            initCharts();
+            wireInteractiveChartControls();
+            selectStage(3);
+            document.querySelectorAll('[id^="stage-card-"]').forEach((card) => {
+                card.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        selectStage(Number(card.id.replace('stage-card-', '')));
+                    }
+                });
+            });
+            document.querySelectorAll('.blueprint-node').forEach((node, index) => {
+                const stage = index + 1;
+                node.setAttribute('role', 'button');
+                node.setAttribute('tabindex', '0');
+                node.setAttribute('aria-label', `Select process stage ${stage}`);
+                node.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        selectStage(stage);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+function initDocumentLibrary() {
+    const loginBox = document.getElementById("docAdminLogin");
+    const adminPanel = document.getElementById("docAdminPanel");
+    const loginForm = document.getElementById("docAdminLoginForm");
+    const uploadForm = document.getElementById("docUploadForm");
+    const loginStatus = document.getElementById("docLoginStatus");
+    const uploadStatus = document.getElementById("docStatus");
+    const libraryStatus = document.getElementById("docLibraryStatus");
+    const list = document.getElementById("docList");
+    const empty = document.getElementById("docEmptyState");
+    const count = document.getElementById("docCount");
+    const loginButton = document.getElementById("docLoginButton");
+    const uploadButton = document.getElementById("docUploadButton");
+    const logoutButton = document.getElementById("docAdminLogout");
+    if (!loginBox || !adminPanel || !loginForm || !uploadForm) return;
+
+    let csrfToken = "";
+    let authenticated = false;
+    const maxPdfBytes = 8 * 1024 * 1024;
+
+    function setAuthenticated(value) {
+        authenticated = Boolean(value);
+        loginBox.classList.toggle("hidden", authenticated);
+        adminPanel.classList.toggle("hidden", !authenticated);
+    }
+
+    async function requestJson(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            ...options
+        });
+        const contentType = response.headers.get("content-type") || "";
+        let payload = {};
+        if (contentType.includes("application/json")) {
+            payload = await response.json();
+        }
+        if (!response.ok) {
+            const error = new Error(payload.error || `Server request failed (${response.status}).`);
+            error.status = response.status;
+            throw error;
+        }
+        return payload;
+    }
+
+    function renderPapers(papers) {
+        list.replaceChildren();
+        count.textContent = `${papers.length} ${papers.length === 1 ? "paper" : "papers"}`;
+        empty.classList.toggle("hidden", papers.length !== 0);
+
+        papers.forEach((paper) => {
+            const card = document.createElement("article");
+            card.className = "min-w-0 rounded-xl border border-slate-800 bg-slate-950/70 p-4";
+
+            const row = document.createElement("div");
+            row.className = "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
+            const info = document.createElement("div");
+            info.className = "min-w-0";
+            const title = document.createElement("h4");
+            title.className = "break-words text-sm font-semibold text-white";
+            title.textContent = paper.title || paper.name || "Untitled paper";
+            const detail = document.createElement("p");
+            detail.className = "mt-1 break-words text-[11px] text-slate-400";
+            detail.textContent = [paper.name, paper.sizeLabel, paper.date].filter(Boolean).join(" · ");
+            info.append(title, detail);
+
+            const link = document.createElement("a");
+            link.className = "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-500/20";
+            link.href = paper.readUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Open PDF";
+            link.setAttribute("aria-label", `Open PDF: ${paper.title || paper.name || "research paper"}`);
+            row.append(info, link);
+            card.appendChild(row);
+
+            if (paper.description) {
+                const description = document.createElement("p");
+                description.className = "mt-3 whitespace-pre-wrap break-words border-t border-slate-800 pt-3 text-xs leading-relaxed text-slate-400";
+                description.textContent = paper.description;
+                card.appendChild(description);
+            }
+            list.appendChild(card);
+        });
+    }
+
+    async function loadPapers() {
+        libraryStatus.textContent = "Loading research papers…";
+        empty.classList.add("hidden");
+        try {
+            const payload = await requestJson("/api/papers");
+            const papers = Array.isArray(payload.papers) ? payload.papers : [];
+            renderPapers(papers);
+            libraryStatus.textContent = "";
+        } catch (error) {
+            list.replaceChildren();
+            count.textContent = "— papers";
+            empty.classList.add("hidden");
+            libraryStatus.textContent = "Could not load papers. Open this page through the Flask app and try again.";
+        }
+    }
+
+    async function refreshAuthStatus() {
+        try {
+            const payload = await requestJson("/api/auth/status");
+            csrfToken = payload.csrfToken || "";
+            setAuthenticated(payload.authenticated);
+            loginStatus.textContent = authenticated
+                ? "Administrator session active."
+                : "Sign in with the server administrator account to upload papers.";
+        } catch (error) {
+            csrfToken = "";
+            setAuthenticated(false);
+            loginStatus.textContent = "Could not contact the Flask server. Open this page from the application to sign in.";
+        }
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const passwordInput = document.getElementById("docAdminPasscode");
+        loginButton.disabled = true;
+        loginStatus.textContent = "Signing in…";
+        try {
+            const payload = await requestJson("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: passwordInput.value })
+            });
+            csrfToken = payload.csrfToken || "";
+            setAuthenticated(payload.authenticated);
+            loginForm.reset();
+            loginStatus.textContent = "Signed in to the server library.";
+            uploadStatus.textContent = "";
+        } catch (error) {
+            loginStatus.textContent = error.message || "Sign-in failed. Check the password and try again.";
+        } finally {
+            loginButton.disabled = false;
+        }
+    });
+
+    logoutButton.addEventListener("click", async () => {
+        logoutButton.disabled = true;
+        uploadStatus.textContent = "Signing out…";
+        try {
+            await requestJson("/api/logout", {
+                method: "POST",
+                headers: { "X-CSRF-Token": csrfToken }
+            });
+            csrfToken = "";
+            setAuthenticated(false);
+            await refreshAuthStatus();
+            uploadStatus.textContent = "Signed out.";
+        } catch (error) {
+            if (error.status === 401) {
+                setAuthenticated(false);
+                await refreshAuthStatus();
+            }
+            uploadStatus.textContent = error.message || "Sign-out failed.";
+        } finally {
+            logoutButton.disabled = false;
+        }
+    });
+
+    uploadForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!authenticated) {
+            uploadStatus.textContent = "Sign in before uploading a paper.";
+            return;
+        }
+        const file = document.getElementById("docFile").files[0];
+        const title = document.getElementById("docTitle").value.trim();
+        const description = document.getElementById("docDescription").value.trim();
+        if (!file || !title) {
+            uploadStatus.textContent = "Enter a title and choose a PDF.";
+            return;
+        }
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+            uploadStatus.textContent = "Only PDF research papers are accepted.";
+            return;
+        }
+        if (file.size > maxPdfBytes) {
+            uploadStatus.textContent = "The PDF must be 8 MB or smaller.";
+            return;
+        }
+        if (title.length > 160 || description.length > 500) {
+            uploadStatus.textContent = "Title must be 160 characters or fewer and description 500 or fewer.";
+            return;
+        }
+
+        uploadButton.disabled = true;
+        uploadStatus.textContent = "Uploading PDF…";
+        try {
+            const formData = new FormData(uploadForm);
+            formData.set("title", title);
+            formData.set("description", description);
+            await requestJson("/api/papers", {
+                method: "POST",
+                headers: { "X-CSRF-Token": csrfToken },
+                body: formData
+            });
+            uploadForm.reset();
+            uploadStatus.textContent = "Paper uploaded to the server library.";
+            await loadPapers();
+        } catch (error) {
+            if (error.status === 401) {
+                setAuthenticated(false);
+                await refreshAuthStatus();
+                uploadStatus.textContent = "Your administrator session expired. Sign in again.";
+            } else {
+                uploadStatus.textContent = error.message || "Upload failed. Please try again.";
+            }
+        } finally {
+            uploadButton.disabled = false;
+        }
+    });
+
+    Promise.all([refreshAuthStatus(), loadPapers()]);
+}
+window.addEventListener("DOMContentLoaded", initDocumentLibrary);
+    </script>
+
+    <script>
+        // Progressive scroll reveals: content remains visible if animation APIs are unavailable.
+        window.addEventListener('DOMContentLoaded', () => {
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const targets = document.querySelectorAll('main section > div, main section > p, main section > aside');
+            if (reducedMotion || !('IntersectionObserver' in window)) return;
+
+            const observer = new IntersectionObserver((entries, currentObserver) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('is-revealed');
+                    currentObserver.unobserve(entry.target);
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+
+            targets.forEach((element, index) => {
+                element.classList.add('scroll-reveal');
+                element.style.setProperty('--reveal-delay', `${Math.min((index % 4) * 65, 195)}ms`);
+                observer.observe(element);
+            });
+        });
+    </script>
+
+</body>
+</html>
