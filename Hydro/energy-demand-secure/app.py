@@ -1,10 +1,13 @@
+import io
 import os
 import secrets
-import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
+import psycopg2
+import psycopg2.extras
 from flask import Flask, jsonify, render_template, request, send_file, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -32,20 +35,20 @@ def load_env_file():
 
 load_env_file()
 
-# On Render, STORAGE_DIR points at the persistent disk (e.g. /var/data).
-# Locally it falls back to the project folder.
-STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", str(BASE_DIR)))
-DATA_DIR = STORAGE_DIR / "data"
-UPLOAD_DIR = STORAGE_DIR / "uploads"
-DB_PATH = DATA_DIR / "papers.sqlite3"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("Set DATABASE_URL to a Postgres connection string (e.g. from Neon or Supabase).")
+# Some providers still hand out postgres:// which psycopg2 accepts, but normalise anyway.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://"):]
 
 IS_RENDER = bool(os.environ.get("RENDER"))  # Render sets RENDER=true automatically
 
 secret_key = os.environ.get("FLASK_SECRET_KEY")
 if not secret_key:
     if IS_RENDER:
-        raise RuntimeError("Set FLASK_SECRET_KEY (a random value is fine) in the Render environment.")
-    secret_key = secrets.token_hex(32)  # local dev only; sessions reset on restart
+        raise RuntimeError("Set FLASK_SECRET_KEY in the Render environment.")
+    secret_key = secrets.token_hex(32)  # local dev only
 
 app = Flask(__name__)
 app.config.update(
@@ -55,36 +58,41 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "0") == "1",
 )
-
-# Render terminates TLS at its proxy; trust X-Forwarded-* headers from it.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-DATA_DIR.mkdir(mode=0o750, parents=True, exist_ok=True)
-UPLOAD_DIR.mkdir(mode=0o750, parents=True, exist_ok=True)
 
-
-def db_connection():
-    connection = sqlite3.connect(DB_PATH, timeout=15)
-    connection.row_factory = sqlite3.Row
-    return connection
+@contextmanager
+def db_cursor():
+    """One short-lived connection per use; commits on success, rolls back on error."""
+    connection = psycopg2.connect(
+        DATABASE_URL,
+        connect_timeout=15,
+        cursor_factory=psycopg2.extras.RealDictCursor,
+    )
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                yield cursor
+    finally:
+        connection.close()
 
 
 def init_db():
-    with db_connection() as db:
-        db.execute(
+    with db_cursor() as cur:
+        cur.execute(
             """
             CREATE TABLE IF NOT EXISTS papers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 title TEXT NOT NULL,
                 description TEXT NOT NULL DEFAULT '',
                 original_name TEXT NOT NULL,
-                stored_name TEXT NOT NULL UNIQUE,
                 size_bytes INTEGER NOT NULL,
-                uploaded_at TEXT NOT NULL
+                uploaded_at TEXT NOT NULL,
+                content BYTEA NOT NULL
             )
             """
         )
-        db.execute(
+        cur.execute(
             """
             CREATE TABLE IF NOT EXISTS admin_account (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -92,14 +100,15 @@ def init_db():
             )
             """
         )
-        if db.execute("SELECT 1 FROM admin_account WHERE id = 1").fetchone() is None:
+        cur.execute("SELECT 1 FROM admin_account WHERE id = 1")
+        if cur.fetchone() is None:
             password = os.environ.get("ADMIN_PASSWORD")
             if not password or len(password) < 12:
                 raise RuntimeError(
                     "Set ADMIN_PASSWORD to a password of at least 12 characters before first start."
                 )
-            db.execute(
-                "INSERT INTO admin_account (id, password_hash) VALUES (1, ?)",
+            cur.execute(
+                "INSERT INTO admin_account (id, password_hash) VALUES (1, %s) ON CONFLICT (id) DO NOTHING",
                 (generate_password_hash(password),),
             )
 
@@ -131,15 +140,20 @@ def admin_required(view):
 
 
 def paper_json(row):
+    size = row["size_bytes"]
     return {
         "id": row["id"],
         "title": row["title"],
         "description": row["description"],
         "name": row["original_name"],
-        "sizeLabel": f"{row['size_bytes'] / 1024:.0f} KB" if row["size_bytes"] < 1024 * 1024 else f"{row['size_bytes'] / (1024 * 1024):.1f} MB",
+        "sizeLabel": f"{size / 1024:.0f} KB" if size < 1024 * 1024 else f"{size / (1024 * 1024):.1f} MB",
         "date": row["uploaded_at"][:10],
         "readUrl": f"/papers/{row['id']}/read",
     }
+
+
+# Never select the BYTEA column when listing.
+PAPER_COLUMNS = "id, title, description, original_name, size_bytes, uploaded_at"
 
 
 @app.after_request
@@ -151,6 +165,11 @@ def security_headers(response):
     if app.config["SESSION_COOKIE_SECURE"]:
         response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
+
+
+@app.get("/healthz")
+def healthz():
+    return "ok", 200  # no DB hit, so uptime pings stay cheap
 
 
 @app.get("/")
@@ -169,8 +188,9 @@ def login():
     if not request.is_json:
         return jsonify(error="JSON is required."), 400
     password = str(request.json.get("password", ""))
-    with db_connection() as db:
-        account = db.execute("SELECT password_hash FROM admin_account WHERE id = 1").fetchone()
+    with db_cursor() as cur:
+        cur.execute("SELECT password_hash FROM admin_account WHERE id = 1")
+        account = cur.fetchone()
     if not account or not check_password_hash(account["password_hash"], password):
         return jsonify(error="Invalid admin credentials."), 401
     session.clear()
@@ -188,8 +208,9 @@ def logout():
 
 @app.get("/api/papers")
 def papers():
-    with db_connection() as db:
-        rows = db.execute("SELECT * FROM papers ORDER BY uploaded_at DESC, id DESC").fetchall()
+    with db_cursor() as cur:
+        cur.execute(f"SELECT {PAPER_COLUMNS} FROM papers ORDER BY uploaded_at DESC, id DESC")
+        rows = cur.fetchall()
     return jsonify(papers=[paper_json(row) for row in rows])
 
 
@@ -208,45 +229,40 @@ def upload_paper():
     original_name = secure_filename(file.filename)
     if not original_name.lower().endswith(".pdf"):
         return jsonify(error="Only PDF research papers are accepted."), 400
-    file.stream.seek(0, os.SEEK_END)
-    size = file.stream.tell()
-    file.stream.seek(0)
-    if size > MAX_PDF_BYTES:
+
+    data = file.stream.read(MAX_PDF_BYTES + 1)
+    if len(data) > MAX_PDF_BYTES:
         return jsonify(error="PDF must be 8 MB or smaller."), 413
-    signature = file.stream.read(5)
-    file.stream.seek(0)
-    if signature != b"%PDF-":
+    if not data.startswith(b"%PDF-"):
         return jsonify(error="The uploaded file is not a valid PDF."), 400
 
-    stored_name = f"{secrets.token_hex(20)}.pdf"
-    destination = UPLOAD_DIR / stored_name
-    file.save(destination)
     uploaded_at = datetime.now(timezone.utc).isoformat()
-    try:
-        with db_connection() as db:
-            cursor = db.execute(
-                "INSERT INTO papers (title, description, original_name, stored_name, size_bytes, uploaded_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (title, description, original_name, stored_name, size, uploaded_at),
-            )
-            paper_id = cursor.lastrowid
-    except Exception:
-        destination.unlink(missing_ok=True)
-        raise
-    with db_connection() as db:
-        row = db.execute("SELECT * FROM papers WHERE id = ?", (paper_id,)).fetchone()
+    with db_cursor() as cur:
+        cur.execute(
+            f"""
+            INSERT INTO papers (title, description, original_name, size_bytes, uploaded_at, content)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING {PAPER_COLUMNS}
+            """,
+            (title, description, original_name, len(data), uploaded_at, psycopg2.Binary(data)),
+        )
+        row = cur.fetchone()
     return jsonify(paper=paper_json(row)), 201
 
 
 @app.get("/papers/<int:paper_id>/read")
 def read_paper(paper_id):
-    with db_connection() as db:
-        row = db.execute("SELECT * FROM papers WHERE id = ?", (paper_id,)).fetchone()
+    with db_cursor() as cur:
+        cur.execute("SELECT original_name, content FROM papers WHERE id = %s", (paper_id,))
+        row = cur.fetchone()
     if not row:
         return jsonify(error="Paper not found."), 404
-    path = UPLOAD_DIR / row["stored_name"]
-    if not path.is_file():
-        return jsonify(error="Paper file is unavailable."), 404
-    return send_file(path, mimetype="application/pdf", as_attachment=False, download_name=row["original_name"])
+    return send_file(
+        io.BytesIO(bytes(row["content"])),
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=row["original_name"],
+    )
 
 
 @app.errorhandler(413)
@@ -254,7 +270,6 @@ def request_too_large(_error):
     return jsonify(error="Upload is too large."), 413
 
 
-# Runs under both gunicorn (import) and `python app.py`.
 init_db()
 
 if __name__ == "__main__":
