@@ -2,22 +2,18 @@ services:
   - type: web
     name: research-papers
     runtime: python
-    plan: starter            # persistent disks require a paid plan
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
-    healthCheckPath: /api/auth/status
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
-      - key: STORAGE_DIR
-        value: /var/data
       - key: COOKIE_SECURE
         value: "1"
       - key: FLASK_SECRET_KEY
         generateValue: true
+      - key: DATABASE_URL
+        sync: false          # paste your Neon/Supabase Postgres connection string
       - key: ADMIN_PASSWORD
-        sync: false          # you'll be prompted for this in the dashboard (min 12 chars)
-    disk:
-      name: papers-data
-      mountPath: /var/data
-      sizeGB: 1
+        sync: false          # min 12 chars; only used on first start
