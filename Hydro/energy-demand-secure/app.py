@@ -6,13 +6,11 @@ from functools import wraps
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, send_file, session
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-UPLOAD_DIR = BASE_DIR / "uploads"
-DB_PATH = DATA_DIR / "papers.sqlite3"
 MAX_PDF_BYTES = 8 * 1024 * 1024
 
 
@@ -34,21 +32,39 @@ def load_env_file():
 
 load_env_file()
 
+# On Render, STORAGE_DIR points at the persistent disk (e.g. /var/data).
+# Locally it falls back to the project folder.
+STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", str(BASE_DIR)))
+DATA_DIR = STORAGE_DIR / "data"
+UPLOAD_DIR = STORAGE_DIR / "uploads"
+DB_PATH = DATA_DIR / "papers.sqlite3"
+
+IS_RENDER = bool(os.environ.get("RENDER"))  # Render sets RENDER=true automatically
+
+secret_key = os.environ.get("FLASK_SECRET_KEY")
+if not secret_key:
+    if IS_RENDER:
+        raise RuntimeError("Set FLASK_SECRET_KEY (a random value is fine) in the Render environment.")
+    secret_key = secrets.token_hex(32)  # local dev only; sessions reset on restart
+
 app = Flask(__name__)
 app.config.update(
-    SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32),
+    SECRET_KEY=secret_key,
     MAX_CONTENT_LENGTH=MAX_PDF_BYTES + 512 * 1024,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "0") == "1",
 )
 
-DATA_DIR.mkdir(mode=0o750, exist_ok=True)
-UPLOAD_DIR.mkdir(mode=0o750, exist_ok=True)
+# Render terminates TLS at its proxy; trust X-Forwarded-* headers from it.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+DATA_DIR.mkdir(mode=0o750, parents=True, exist_ok=True)
+UPLOAD_DIR.mkdir(mode=0o750, parents=True, exist_ok=True)
 
 
 def db_connection():
-    connection = sqlite3.connect(DB_PATH)
+    connection = sqlite3.connect(DB_PATH, timeout=15)
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -132,6 +148,8 @@ def security_headers(response):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+    if app.config["SESSION_COOKIE_SECURE"]:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
 
 
@@ -236,8 +254,8 @@ def request_too_large(_error):
     return jsonify(error="Upload is too large."), 413
 
 
+# Runs under both gunicorn (import) and `python app.py`.
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=False)
-else:
-    init_db()
